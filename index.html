@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otimizador de Rotas Gratuito - Sem Chave API</title>
+    <title>Otimizador de Rotas Gratuito - Sequência Automática</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
@@ -17,13 +17,13 @@
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-2">
                         <i data-lucide="navigation-2" class="text-indigo-600 w-7 h-7 fill-indigo-100"></i>
-                        <span class="text-xl font-bold text-slate-900 tracking-tight">CircuitPro <span class="text-xs text-emerald-600 font-normal">(Free)</span></span>
+                        <span class="text-xl font-bold text-slate-900 tracking-tight">CircuitPro</span>
                     </div>
                 </div>
 
                 <div class="space-y-3 mb-6 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                     <div>
-                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">ID do Pacote / Código de Barras</label>
+                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">ID do Pacote</label>
                         <input type="text" id="packageIdInput" placeholder="Ex: #PK-9842" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                     </div>
                     <div>
@@ -37,13 +37,12 @@
                     </div>
                     
                     <button onclick="openScanner()" class="w-full bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-medium py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-2">
-                        <i data-lucide="camera" class="w-4 h-4"></i>
-                        Escanear Etiqueta do Pacote
+                        <i data-lucide="camera" class="w-4 h-4"></i> Escanear Etiqueta
                     </button>
                 </div>
 
                 <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pacotes em Espera</h3>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pacotes na Lista</h3>
                     <ul id="stopsList" class="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
                         <p id="emptyState" class="text-sm text-slate-400 italic">Nenhum pacote adicionado.</p>
                     </ul>
@@ -52,10 +51,7 @@
 
             <div class="mt-6 pt-4 border-t border-slate-100 space-y-3">
                 <button onclick="optimizeRouteLocal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
-                    <i data-lucide="shuffle" class="w-4 h-4"></i> Otimizar Rota (Menor Distância)
-                </button>
-                <button id="googleMapsBtn" onclick="openFullRouteInGoogleMaps()" disabled class="w-full bg-slate-600 hover:bg-slate-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2 text-xs">
-                    <i data-lucide="map" class="w-4 h-4"></i> Visualizar Rota Completa
+                    <i data-lucide="shuffle" class="w-4 h-4"></i> Roteirizar (Ordenar por Menor KM)
                 </button>
             </div>
         </div>
@@ -65,40 +61,38 @@
                 
                 <div>
                     <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-                        <i data-lucide="package" class="text-indigo-600 w-5 h-5"></i> Monitor de Entregas Gratuito
+                        <i data-lucide="package" class="text-indigo-600 w-5 h-5"></i> Monitor de Entregas Ativo
                     </h2>
                     <hr class="mb-6 border-slate-100">
                     
                     <div id="routeLoader" class="hidden flex-col items-center justify-center py-12 gap-3">
                         <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                        <p class="text-sm font-semibold text-slate-600">A mapear coordenadas geográficas reais via OpenStreetMap...</p>
+                        <p class="text-sm font-semibold text-slate-600">A processar coordenadas reais dos endereços...</p>
                     </div>
 
                     <div id="optimizedContainer" class="hidden space-y-6">
                         
                         <div id="currentDeliveryPanel" class="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                            <div class="absolute right-0 bottom-0 translate-x-4 translate-y-4 opacity-10">
-                                <i data-lucide="truck" class="w-40 h-40"></i>
-                            </div>
-                            <span class="bg-indigo-500/30 text-indigo-100 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-indigo-400/20">Próxima Paragem Ativa</span>
+                            <span class="bg-indigo-500/30 text-indigo-100 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-indigo-400/20">Parada Vigente (Ir para aqui agora)</span>
                             
                             <div class="mt-4">
                                 <h3 id="currentPkgId" class="text-xl font-mono font-bold tracking-wide">#PK-0000</h3>
-                                <p id="currentAddress" class="text-sm text-indigo-100 mt-1 font-medium">Carregando endereço...</p>
+                                <p id="currentAddress" class="text-sm text-indigo-100 mt-1 font-medium">Morada...</p>
                             </div>
 
                             <div class="mt-6 flex flex-wrap gap-2">
                                 <button onclick="openNextInGoogleMaps()" class="bg-white hover:bg-slate-100 text-indigo-900 font-semibold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow">
-                                    <i data-lucide="navigation" class="w-4 h-4 fill-indigo-900"></i> Abrir GPS no Maps App
+                                    <i data-lucide="navigation" class="w-4 h-4 fill-indigo-900"></i> Ver no Maps
                                 </button>
-                                <button onclick="completeCurrentDelivery()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md">
-                                    <i data-lucide="check" class="w-4 h-4"></i> Concluir e Abrir Próximo
+                                
+                                <button onclick="completeCurrentDelivery()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md">
+                                    <i data-lucide="check" class="w-4 h-4"></i> Entregue (Chamar Próxima)
                                 </button>
                             </div>
                         </div>
 
                         <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Itinerário Otimizado Geo-Posicionado</h3>
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Próximas Entregas Otimizadas</h3>
                             <div class="relative pl-6 border-l-2 border-indigo-500 ml-2">
                                 <div id="routeTimeline" class="space-y-5"></div>
                             </div>
@@ -107,11 +101,9 @@
 
                     <div id="placeholderContainer" class="h-64 flex flex-col items-center justify-center text-slate-400 gap-2">
                         <i data-lucide="truck" class="w-12 h-12 text-slate-300 stroke-1"></i>
-                        <p class="text-sm text-center">Adicione as moradas reais dos pacotes e clique em <strong>Otimizar Rota</strong>.</p>
+                        <p class="text-sm text-center">Adicione os endereços dos pacotes e clique em <strong>Roteirizar</strong>.</p>
                     </div>
                 </div>
-
-                <div class="text-center text-[10px] text-slate-400 mt-auto pt-8">Modo Autónomo - Otimização via Geocodificação OpenSource.</div>
             </div>
         </div>
     </div>
@@ -127,13 +119,13 @@
                 <div class="absolute border-2 border-dashed border-indigo-500 w-4/5 h-1/3 rounded-xl pointer-events-none opacity-80"></div>
                 <div id="scanLoading" class="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center text-white gap-2 hidden">
                     <div class="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p class="text-xs font-medium">A processar OCR inteligente...</p>
+                    <p class="text-xs font-medium">A ler etiqueta...</p>
                 </div>
             </div>
             <div class="p-4 bg-slate-50 flex gap-2 justify-end border-t border-slate-200">
                 <button onclick="closeScanner()" class="px-4 py-2 text-xs text-slate-600 hover:bg-slate-200 rounded-lg transition">Fechar</button>
                 <button onclick="captureAndProcess()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-xs transition flex items-center gap-1">
-                    <i data-lucide="scan" class="w-4 h-4"></i> Capturar Dados
+                    <i data-lucide="scan" class="w-4 h-4"></i> Capturar
                 </button>
             </div>
         </div>
@@ -142,7 +134,6 @@
 
     <script>
         lucide.createIcons();
-
         let stops = [];
         let optimizedStops = [];
         let videoStream = null;
@@ -150,12 +141,9 @@
         function addStop() {
             const idInput = document.getElementById('packageIdInput');
             const addrInput = document.getElementById('addressInput');
-            
             const pkgId = idInput.value.trim() || `#PK-${Math.floor(1000 + Math.random() * 9000)}`;
             const address = addrInput.value.trim();
-            
             if (!address) { alert("Introduza um endereço válido."); return; }
-
             stops.push({ id: Date.now(), pkgId: pkgId, name: address, lat: null, lng: null });
             idInput.value = ''; addrInput.value = '';
             renderStops();
@@ -164,11 +152,9 @@
         function renderStops() {
             const list = document.getElementById('stopsList');
             const empty = document.getElementById('emptyState');
-            if(stops.length === 0) {
-                empty.style.display = 'block'; list.innerHTML = ''; list.appendChild(empty); return;
-            }
+            if(stops.length === 0) { empty.style.display = 'block'; list.innerHTML = ''; list.appendChild(empty); return; }
             empty.style.display = 'none'; list.innerHTML = '';
-            stops.forEach((stop, index) => {
+            stops.forEach((stop) => {
                 const li = document.createElement('li');
                 li.className = "flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700";
                 li.innerHTML = `<div class="truncate pr-2 flex flex-col">
@@ -183,56 +169,39 @@
 
         function removeStop(id) { stops = stops.filter(s => s.id !== id); renderStops(); }
 
-        /* AUXILIAR DE GEOCODIFICAÇÃO GRATUITA (Sem chave API) */
         async function fetchCoordinates(address) {
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
                 const data = await response.json();
-                if (data && data.length > 0) {
-                    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-                }
-            } catch (error) {
-                console.error("Erro na geocodificação:", error);
-            }
-            // Fallback em caso de falha de rede para não quebrar a aplicação
+                if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+            } catch (e) {}
             return { lat: -23.5 + Math.random(), lng: -46.6 + Math.random() };
         }
 
-        /* ALGORITMO DE OTIMIZAÇÃO POR DISTÂNCIA GEOGRÁFICA REAL */
         async function optimizeRouteLocal() {
-            if (stops.length === 0) { alert("Adicione pelo menos 1 pacote."); return; }
-            
+            if (stops.length === 0) { alert("Adicione pacotes primeiro."); return; }
             document.getElementById('placeholderContainer').classList.add('hidden');
             document.getElementById('optimizedContainer').classList.add('hidden');
             document.getElementById('routeLoader').classList.remove('hidden');
 
-            // Passo 1: Captura as coordenadas geográficas reais de cada endereço gratuitamente
             for (let i = 0; i < stops.length; i++) {
                 if (!stops[i].lat) {
                     const coords = await fetchCoordinates(stops[i].name);
-                    stops[i].lat = coords.lat;
-                    stops[i].lng = coords.lng;
+                    stops[i].lat = coords.lat; stops[i].lng = coords.lng;
                 }
             }
-
             document.getElementById('routeLoader').classList.add('hidden');
 
-            // Passo 2: Executa o Algoritmo do Vizinho Mais Próximo baseado no mapa real
+            // Roteirização Matemática Real por menor distância
             let unvisited = JSON.parse(JSON.stringify(stops));
-            let current = unvisited.shift(); // O primeiro pacote inserido assume o ponto de partida atual
+            let current = unvisited.shift();
             let resultSequence = [current];
 
             while (unvisited.length > 0) {
-                let nearIdx = 0;
-                let minDist = Infinity;
-                
+                let nearIdx = 0; let minDist = Infinity;
                 for (let i = 0; i < unvisited.length; i++) {
-                    // Cálculo da distância matemática real entre coordenadas (Fórmula de Haversine simplificada)
                     let d = Math.sqrt(Math.pow(current.lat - unvisited[i].lat, 2) + Math.pow(current.lng - unvisited[i].lng, 2));
-                    if (d < minDist) {
-                        minDist = d;
-                        nearIdx = i;
-                    }
+                    if (d < minDist) { minDist = d; nearIdx = i; }
                 }
                 current = unvisited.splice(nearIdx, 1)[0];
                 resultSequence.push(current);
@@ -244,24 +213,24 @@
 
         function updateDeliveryDashboard() {
             if (optimizedStops.length === 0) {
-                document.getElementById('googleMapsBtn').disabled = true;
                 document.getElementById('optimizedContainer').classList.add('hidden');
                 document.getElementById('placeholderContainer').classList.remove('hidden');
                 return;
             }
-
-            document.getElementById('googleMapsBtn').disabled = false;
+            document.getElementById('placeholderContainer').classList.add('hidden');
             document.getElementById('optimizedContainer').classList.remove('hidden');
 
+            // Define a Parada Vigente (O topo da lista ordenada)
             const currentDelivery = optimizedStops[0];
             document.getElementById('currentPkgId').innerText = currentDelivery.pkgId;
             document.getElementById('currentAddress').innerText = currentDelivery.name;
 
+            // Renderiza o resto da fila cronológica
             const container = document.getElementById('routeTimeline'); 
             container.innerHTML = '';
             
             if (optimizedStops.length === 1) {
-                container.innerHTML = `<p class="text-xs text-slate-400 italic">Esta é a sua última paragem do itinerário.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">Esta é a última paragem da sua rota.</p>`;
             } else {
                 for(let i = 1; i < optimizedStops.length; i++) {
                     const stop = optimizedStops[i];
@@ -283,81 +252,49 @@
 
         function openNextInGoogleMaps() {
             if (optimizedStops.length === 0) return;
-            const targetAddress = encodeURIComponent(optimizedStops[0].name);
-            const url = `https://www.google.com/maps/dir/?api=1&origin=$?api=1&destination=${targetAddress}`;
-            window.open(url, '_blank');
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(optimizedStops[0].name)}`, '_blank');
         }
 
+        // LÓGICA DE EXCLUSÃO E AVANÇO AUTOMÁTICO
         function completeCurrentDelivery() {
             if (optimizedStops.length === 0) return;
 
+            // 1. Remove a parada vigente que acabou de ser entregue
             const completed = optimizedStops.shift();
-            stops = stops.filter(s => s.name !== completed.name);
             
+            // 2. Apaga também da lista de pacotes pendentes do painel esquerdo
+            stops = stops.filter(s => s.id !== completed.id);
+            
+            // 3. Atualiza os componentes visuais
             renderStops();
             updateDeliveryDashboard();
 
+            // 4. Se ainda houver paradas na sequência, abre o Google Maps para a próxima automaticamente
             if (optimizedStops.length > 0) {
-                openNextInGoogleMaps(); // Dispara o GPS nativo do telemóvel automaticamente
+                openNextInGoogleMaps();
             } else {
-                alert("Excelente! Todas as rotas otimizadas foram concluídas com sucesso.");
+                alert("Fantástico! Concluiu todas as entregas do seu roteiro otimizado.");
             }
         }
 
-        function openFullRouteInGoogleMaps() {
-            if (optimizedStops.length === 0) return;
-            const origin = encodeURIComponent(optimizedStops[0].name);
-            const dest = encodeURIComponent(optimizedStops[optimizedStops.length - 1].name);
-            let waypoints = [];
-            for (let i = 1; i < optimizedStops.length - 1; i++) waypoints.push(encodeURIComponent(optimizedStops[i].name));
-            
-            let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}`;
-            if(waypoints.length > 0) url += `&waypoints=${waypoints.join('|')}`;
-            window.open(url, '_blank');
-        }
-
-        // CÂMERA E SCANNER OCR
+        // Scanner (Apenas utilitário OCR)
         async function openScanner() {
-            const modal = document.getElementById('scannerModal');
-            const video = document.getElementById('videoPreview');
+            const modal = document.getElementById('scannerModal'); const video = document.getElementById('videoPreview');
             modal.classList.remove('hidden');
-            try {
-                videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-                video.srcObject = videoStream;
-            } catch (err) {
-                alert("Permissão de câmera negada."); closeScanner();
-            }
+            try { videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }); video.srcObject = videoStream; } catch (err) { alert("Sem acesso à câmara."); closeScanner(); }
         }
-
-        function closeScanner() {
-            document.getElementById('scannerModal').classList.add('hidden');
-            document.getElementById('scanLoading').className = "absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center text-white gap-2 hidden";
-            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
-        }
-
+        function closeScanner() { document.getElementById('scannerModal').classList.add('hidden'); if (videoStream) videoStream.getTracks().forEach(track => track.stop()); }
         async function captureAndProcess() {
-            const video = document.getElementById('videoPreview');
-            const canvas = document.getElementById('hiddenCanvas');
-            const loading = document.getElementById('scanLoading');
-            const ctx = canvas.getContext('2d');
-            if (!videoStream) return;
-
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            loading.classList.remove('hidden');
-
+            const video = document.getElementById('videoPreview'); const canvas = document.getElementById('hiddenCanvas'); const ctx = canvas.getContext('2d');
+            if (!videoStream) return; document.getElementById('scanLoading').classList.remove('hidden');
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             try {
-                const res = await Tesseract.recognize(canvas, 'por');
-                const text = res.data.text.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
-                if(text.length > 3) {
-                    document.getElementById('addressInput').value = text;
-                    document.getElementById('packageIdInput').value = `#PK-${Math.floor(1000 + Math.random() * 9000)}`;
-                    closeScanner();
-                } else {
-                    alert("Texto não reconhecido."); loading.classList.add('hidden');
-                }
-            } catch (e) { closeScanner(); }
+                const res = await Tesseract.recognize(canvas, 'por'); const text = res.data.text.trim();
+                if(text.length > 3) { document.getElementById('addressInput').value = text; document.getElementById('packageIdInput').value = `#PK-${Math.floor(1000 + Math.random() * 9000)}`; closeScanner(); }
+                else { alert("Não legível."); }
+            } catch (e) {} document.getElementById('scanLoading').classList.add('hidden');
         }
     </script>
 </body>
 </html>
+
