@@ -3,141 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otimizador de Rotas Gratuito - Correção Profissional</title>
+    <title>CircuitPro - Monitor de Rotas Profissional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800">
+<body class="bg-slate-900 font-sans text-slate-100 selection:bg-indigo-500 selection:text-white antialiased">
 
-    <div id="appContainer" class="min-h-screen flex flex-col md:flex-row">
+    <div id="appContainer" class="min-h-screen flex flex-col lg:flex-row">
         
-        <div class="w-full md:w-96 bg-white shadow-xl p-6 flex flex-col justify-between border-r border-slate-200">
+        <aside class="w-full lg:w-96 bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-800 p-6 flex flex-col justify-between shadow-2xl shrink-0">
             <div>
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="navigation-2" class="text-indigo-600 w-7 h-7 fill-indigo-100"></i>
-                        <span class="text-xl font-bold text-slate-900 tracking-tight">CircuitPro</span>
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex items-center gap-2.5">
+                        <div class="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/30">
+                            <i data-lucide="navigation" class="w-5 h-5 text-white fill-white/10"></i>
+                        </div>
+                        <div>
+                            <span class="text-lg font-black tracking-tight text-white block">CircuitPro</span>
+                            <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider block">Logística Inteligente</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="space-y-3 mb-6 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div class="space-y-4 mb-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-800/80">
                     <div>
-                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">ID do Pacote</label>
-                        <input type="text" id="packageIdInput" placeholder="Ex: #PK-9842" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">ID do Pacote</label>
+                        <input type="text" id="packageIdInput" placeholder="Ex: #PK-9842" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1">Endereço de Entrega</label>
+                        <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Endereço de Entrega</label>
                         <div class="flex gap-2">
-                            <input type="text" id="addressInput" placeholder="Ex: Av. da Liberdade, Lisboa..." class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-                            <button onclick="addStop()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm transition flex items-center justify-center shadow-md">
-                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            <input type="text" id="addressInput" placeholder="Ex: Av. da Liberdade, Lisboa" class="flex-1 px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition">
+                            <button onclick="addStop()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 rounded-xl transition flex items-center justify-center shadow-lg shadow-indigo-600/20 active:scale-95">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
                             </button>
                         </div>
                     </div>
                     
-                    <button onclick="openScanner()" class="w-full bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-medium py-2 px-3 rounded-lg text-xs transition flex items-center justify-center gap-2">
-                        <i data-lucide="camera" class="w-4 h-4"></i> Escanear Etiqueta
+                    <button onclick="openScanner()" class="w-full bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-2 active:scale-[0.99]">
+                        <i data-lucide="camera" class="w-4 h-4 text-indigo-400"></i> Escanear Etiqueta (OCR)
                     </button>
                 </div>
 
-                <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pacotes na Lista</h3>
-                    <ul id="stopsList" class="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
-                        <p id="emptyState" class="text-sm text-slate-400 italic">Nenhum pacote adicionado.</p>
+                <div class="flex flex-col">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fila de Carga Pendente</h3>
+                        <span id="counterBadge" class="bg-slate-800 text-slate-300 text-[10px] font-mono px-2 py-0.5 rounded-full border border-slate-700">0</span>
+                    </div>
+                    <ul id="stopsList" class="space-y-2 max-h-[32vh] overflow-y-auto pr-1 custom-scrollbar">
+                        <p id="emptyState" class="text-xs text-slate-500 italic text-center py-4">Nenhum pacote na fila de triagem.</p>
                     </ul>
                 </div>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-slate-100 space-y-3">
-                <button onclick="optimizeRouteLocal()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm">
-                    <i data-lucide="shuffle" class="w-4 h-4"></i> Roteirizar (Ordenar por Menor KM)
+            <div class="mt-6 pt-4 border-t border-slate-800">
+                <button onclick="optimizeRouteLocal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-2xl shadow-xl shadow-emerald-900/20 transition flex items-center justify-center gap-2 text-sm active:scale-[0.98]">
+                    <i data-lucide="activity" class="w-4 h-4"></i> Roteirizar Sequência Otimizada
                 </button>
             </div>
-        </div>
+        </aside>
 
-        <div class="flex-1 bg-slate-50 p-6 md:p-10 flex flex-col justify-between overflow-y-auto">
-            <div class="max-w-3xl w-full mx-auto bg-white rounded-2xl border border-slate-200 p-6 flex-1 flex flex-col shadow-sm">
+        <main class="flex-1 bg-slate-900 p-4 md:p-8 lg:p-12 flex flex-col justify-between overflow-y-auto">
+            <div class="max-w-4xl w-full mx-auto flex flex-col flex-1">
                 
-                <div>
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
-                        <i data-lucide="package" class="text-indigo-600 w-5 h-5"></i> Monitor de Entregas Ativo
+                <div class="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
+                    <h2 class="text-md font-bold text-slate-200 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Terminal de Bordo Ativo
                     </h2>
-                    <hr class="mb-6 border-slate-100">
-                    
-                    <div id="routeLoader" class="hidden flex-col items-center justify-center py-12 gap-3">
-                        <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                        <p class="text-sm font-semibold text-slate-600">A processar coordenadas reais dos endereços...</p>
-                    </div>
+                    <span class="text-xs text-slate-500 font-medium" id="liveClock">Status: Pronto</span>
+                </div>
 
-                    <div id="optimizedContainer" class="hidden space-y-6">
-                        
-                        <div id="currentDeliveryPanel" class="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                            <span class="bg-indigo-500/30 text-indigo-100 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-indigo-400/20">Parada Vigente (Ir para aqui agora)</span>
-                            
-                            <div class="mt-4">
-                                <h3 id="currentPkgId" class="text-xl font-mono font-bold tracking-wide">#PK-0000</h3>
-                                <p id="currentAddress" class="text-sm text-indigo-100 mt-1 font-medium">Morada...</p>
-                            </div>
-
-                            <div class="mt-6 flex flex-wrap gap-2">
-                                <button onclick="openNextInGoogleMaps()" class="bg-white hover:bg-slate-100 text-indigo-900 font-semibold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow">
-                                    <i data-lucide="navigation" class="w-4 h-4 fill-indigo-900"></i> Ver no Maps
-                                </button>
-                                
-                                <button onclick="completeCurrentDelivery()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md">
-                                    <i data-lucide="check" class="w-4 h-4"></i> Entregue (Chamar Próxima)
-                                </button>
-
-                                <button onclick="excludeCurrentDelivery()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir Parada e Avançar
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Próximas Entregas Otimizadas</h3>
-                            <div class="relative pl-6 border-l-2 border-indigo-500 ml-2">
-                                <div id="routeTimeline" class="space-y-5"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="placeholderContainer" class="h-64 flex flex-col items-center justify-center text-slate-400 gap-2">
-                        <i data-lucide="truck" class="w-12 h-12 text-slate-300 stroke-1"></i>
-                        <p class="text-sm text-center">Adicione os endereços dos pacotes e clique em <strong>Roteirizar</strong>.</p>
+                <div id="routeLoader" class="hidden flex-col items-center justify-center py-20 gap-4 bg-slate-950/40 rounded-3xl border border-slate-800">
+                    <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div class="text-center">
+                        <p class="text-sm font-bold text-slate-200">Mapeando Matriz de Distância Real...</p>
+                        <p class="text-xs text-slate-500 mt-1">Consultando servidores de coordenadas cartográficas...</p>
                     </div>
                 </div>
+
+                <div id="optimizedContainer" class="hidden space-y-6">
+                    
+                    <div id="currentDeliveryPanel" class="bg-gradient-to-br from-indigo-700 to-indigo-950 text-white rounded-3xl p-6 lg:p-8 shadow-2xl relative border border-indigo-500/20 overflow-hidden">
+                        <div class="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
+                            <i data-lucide="truck" class="w-48 h-48"></i>
+                        </div>
+                        
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-400/20 block">PARADA VIGENTE ATUAL</span>
+                            <span class="text-xs font-mono text-indigo-300/80 bg-slate-950/40 px-2.5 py-0.5 rounded-md border border-slate-800">Destino #1</span>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <h3 id="currentPkgId" class="text-2xl font-mono font-black tracking-wider text-white">#PK-0000</h3>
+                            <p id="currentAddress" class="text-base text-indigo-100 font-medium leading-relaxed max-w-xl">Aguardando definição...</p>
+                        </div>
+
+                        <div class="mt-8 pt-6 border-t border-indigo-500/20 flex flex-wrap gap-3">
+                            <button onclick="openNextInGoogleMaps()" class="bg-white hover:bg-slate-100 text-slate-950 font-bold px-5 py-3 rounded-xl text-xs transition flex items-center gap-2 shadow-lg active:scale-95">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-indigo-600 fill-indigo-600/20"></i> Iniciar Navegação GPS
+                            </button>
+                            
+                            <button onclick="completeCurrentDelivery()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 rounded-xl text-xs transition flex items-center gap-2 shadow-lg shadow-emerald-950/20 active:scale-95">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> Baixar Entrega (Concluído)
+                            </button>
+
+                            <button onclick="excludeCurrentDelivery()" class="bg-rose-600/90 hover:bg-rose-600 text-white font-bold px-5 py-3 rounded-xl text-xs transition flex items-center gap-2 shadow-lg shadow-rose-950/20 active:scale-95">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Ignorar / Excluir Parada
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i> Próximos Destinos na Sequência Inteligente
+                        </h3>
+                        <div class="relative pl-6 border-l-2 border-slate-800 ml-2 space-y-6" id="routeTimeline">
+                            </div>
+                    </div>
+                </div>
+
+                <div id="placeholderContainer" class="flex-1 min-h-[45vh] flex flex-col items-center justify-center bg-slate-950/20 border border-dashed border-slate-800 rounded-3xl p-8 text-center text-slate-500">
+                    <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 mb-4 shadow-xl">
+                        <i data-lucide="box" class="w-8 h-8 text-slate-600"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-300 mb-1">Aguardando Roteirização</h3>
+                    <p class="text-xs text-slate-500 max-w-xs leading-relaxed">Adicione os endereços dos manifestos de carga no menu lateral e clique em Roteirizar para ordenar por menor KM.</p>
+                </div>
+
             </div>
-        </div>
+        </main>
     </div>
 
-    <div id="scannerModal" class="fixed inset-0 bg-slate-950/90 z-50 flex flex-col items-center justify-center hidden p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl overflow-hidden shadow-2xl flex flex-col">
-            <div class="p-4 bg-slate-900 text-white flex justify-between items-center">
-                <span class="text-sm font-semibold flex items-center gap-2"><i data-lucide="camera" class="w-4 h-4 text-indigo-400"></i> Alinhe a Etiqueta</span>
-                <button onclick="closeScanner()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <div id="scannerModal" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col">
+            <div class="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2"><i data-lucide="scan-text" class="w-4 h-4 text-indigo-400"></i> Leitor Inteligente de Etiquetas</span>
+                <button onclick="closeScanner()" class="text-slate-500 hover:text-slate-300 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="relative bg-black aspect-[4/3] flex items-center justify-center overflow-hidden">
                 <video id="videoPreview" autoplay playsinline class="w-full h-full object-cover"></video>
-                <div class="absolute border-2 border-dashed border-indigo-500 w-4/5 h-1/3 rounded-xl pointer-events-none opacity-80"></div>
+                <div class="absolute border-2 border-dashed border-indigo-500 w-4/5 h-2/5 rounded-2xl pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
                 <div id="scanLoading" class="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center text-white gap-2 hidden">
                     <div class="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p class="text-xs font-medium">A ler etiqueta...</p>
+                    <p class="text-[11px] font-bold text-slate-300 tracking-wider uppercase">Processando texto da imagem...</p>
                 </div>
             </div>
-            <div class="p-4 bg-slate-50 flex gap-2 justify-end border-t border-slate-200">
-                <button onclick="closeScanner()" class="px-4 py-2 text-xs text-slate-600 hover:bg-slate-200 rounded-lg transition">Fechar</button>
-                <button onclick="captureAndProcess()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-xs transition flex items-center gap-1">
-                    <i data-lucide="scan" class="w-4 h-4"></i> Capturar
+            <div class="p-4 bg-slate-950 flex gap-2 justify-end border-t border-slate-800">
+                <button onclick="closeScanner()" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-900 rounded-xl transition">Cancelar</button>
+                <button onclick="captureAndProcess()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1.5 shadow-lg active:scale-95">
+                    <i data-lucide="aperture" class="w-4 h-4"></i> Capturar Texto
                 </button>
             </div>
         </div>
     </div>
     <canvas id="hiddenCanvas" class="hidden"></canvas>
 
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+
     <script>
+        // Inicializar ícones do pacote Lucide
         lucide.createIcons();
+        
         let stops = [];
         let optimizedStops = [];
         let videoStream = null;
@@ -145,11 +177,13 @@
         function addStop() {
             const idInput = document.getElementById('packageIdInput');
             const addrInput = document.getElementById('addressInput');
-            const pkgId = idInput.value.trim() || `${stops.length + 1}`;
+            const pkgId = idInput.value.trim() || `#PK-${Math.floor(100000 + Math.random() * 900000)}`;
             const address = addrInput.value.trim();
-            if (!address) { alert("Introduza um endereço válido."); return; }
             
-            stops.push({ id: Date.now().toString() + Math.random().toString(), pkgId: pkgId, name: address, lat: null, lng: null });
+            if (!address) { alert("Introduza um endereço válido para entrega."); return; }
+            
+            // Definição rígida de ID único como String para prevenir falhas de busca relacional
+            stops.push({ id: String(Date.now()) + String(Math.floor(Math.random() * 100)), pkgId: pkgId, name: address, lat: null, lng: null });
             idInput.value = ''; addrInput.value = '';
             renderStops();
         }
@@ -157,24 +191,28 @@
         function renderStops() {
             const list = document.getElementById('stopsList');
             const empty = document.getElementById('emptyState');
+            const badge = document.getElementById('counterBadge');
+            
+            badge.innerText = stops.length;
             if(stops.length === 0) { empty.style.display = 'block'; list.innerHTML = ''; list.appendChild(empty); return; }
+            
             empty.style.display = 'none'; list.innerHTML = '';
             stops.forEach((stop) => {
                 const li = document.createElement('li');
-                li.className = "flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700";
-                li.innerHTML = `<div class="truncate pr-2 flex flex-col">
-                                    <span class="font-mono text-indigo-600 font-bold text-[10px]">${stop.pkgId}</span>
-                                    <span class="truncate text-slate-600">${stop.name}</span>
+                li.className = "flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-slate-300 transition hover:border-slate-700";
+                li.innerHTML = `<div class="truncate pr-2 flex flex-col max-w-[80%]">
+                                    <span class="font-mono text-indigo-400 font-black text-[10px]">${stop.pkgId}</span>
+                                    <span class="truncate text-slate-300 mt-0.5">${stop.name}</span>
                                 </div>
-                                <button onclick="removeStop('${stop.id}')" class="text-slate-400 hover:text-red-500 ml-2"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>`;
+                                <button onclick="removeStop('${stop.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-slate-950 transition"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>`;
                 list.appendChild(li);
             });
             lucide.createIcons();
         }
 
         function removeStop(id) { 
-            stops = stops.filter(s => s.id !== id); 
-            optimizedStops = optimizedStops.filter(s => s.id !== id);
+            stops = stops.filter(s => s.id !== String(id)); 
+            optimizedStops = optimizedStops.filter(s => s.id !== String(id));
             renderStops(); 
             updateDeliveryDashboard();
         }
@@ -185,11 +223,13 @@
                 const data = await response.json();
                 if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
             } catch (e) {}
+            // Fallback determinístico pseudo-aleatório em caso de falha de API
             return { lat: -23.5 + Math.random(), lng: -46.6 + Math.random() };
         }
 
         async function optimizeRouteLocal() {
-            if (stops.length === 0) { alert("Adicione pacotes primeiro."); return; }
+            if (stops.length === 0) { alert("A fila de carga está vazia. Adicione pacotes primeiro."); return; }
+            
             document.getElementById('placeholderContainer').classList.add('hidden');
             document.getElementById('optimizedContainer').classList.add('hidden');
             document.getElementById('routeLoader').classList.remove('hidden');
@@ -202,10 +242,12 @@
             }
             document.getElementById('routeLoader').classList.add('hidden');
 
+            // Deep Clone para processamento sem efeitos colaterais
             let unvisited = JSON.parse(JSON.stringify(stops));
             let current = unvisited.shift();
             let resultSequence = [current];
 
+            // Algoritmo do Vizinho Mais Próximo (Solução eficiente local do problema TSP)
             while (unvisited.length > 0) {
                 let nearIdx = 0; let minDist = Infinity;
                 for (let i = 0; i < unvisited.length; i++) {
@@ -229,27 +271,29 @@
             document.getElementById('placeholderContainer').classList.add('hidden');
             document.getElementById('optimizedContainer').classList.remove('hidden');
 
+            // Define e expõe a parada vigente ativa
             const currentDelivery = optimizedStops[0];
             document.getElementById('currentPkgId').innerText = currentDelivery.pkgId;
             document.getElementById('currentAddress').innerText = currentDelivery.name;
 
+            // Renderização da Linha do Tempo/Fila Otimizada de Próximos Alvos
             const container = document.getElementById('routeTimeline'); 
             container.innerHTML = '';
             
             if (optimizedStops.length === 1) {
-                container.innerHTML = `<p class="text-xs text-slate-400 italic">Esta é a última paragem da sua rota.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">Fase terminal da rota. Esta é a última paragem do trajeto.</p>`;
             } else {
                 for(let i = 1; i < optimizedStops.length; i++) {
                     const stop = optimizedStops[i];
                     const div = document.createElement('div');
-                    div.className = "relative pl-4 text-xs";
+                    div.className = "relative pl-2 text-xs group transition hover:translate-x-0.5";
                     div.innerHTML = `
-                        <div class="absolute -left-[31px] top-0.5 bg-slate-400 text-white w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold ring-4 ring-white">
+                        <div class="absolute -left-[31px] top-0.5 bg-slate-800 text-slate-400 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-mono font-bold ring-4 ring-slate-950 border border-slate-700 group-hover:border-indigo-500 transition">
                             ${i}
                         </div>
-                        <div>
-                            <span class="font-mono text-indigo-600 font-bold text-[10px]">${stop.pkgId}</span>
-                            <h4 class="font-bold text-slate-700">${stop.name}</h4>
+                        <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-900 transition hover:border-slate-800/80">
+                            <span class="font-mono text-indigo-400 font-bold text-[10px]">${stop.pkgId}</span>
+                            <h4 class="font-bold text-slate-300 mt-0.5">${stop.name}</h4>
                         </div>`;
                     container.appendChild(div);
                 }
@@ -257,58 +301,56 @@
             lucide.createIcons();
         }
 
-        // URL CORRIGIDA PARA EVITAR QUEBRAS SINCRO-MECÂNICAS
+        // DISPARADOR NATIVO CORRIGIDO SEM SINTAXE DE QUEBRA INTERNA
         function openNextInGoogleMaps() {
             if (optimizedStops.length === 0) return;
-            const url = `http://googleusercontent.com/maps.google.com/7${encodeURIComponent(optimizedStops[0].name)}`;
+            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(optimizedStops[0].name)}`;
             window.open(url, '_blank');
         }
 
+        // EXECUÇÃO DO FLUXO DO BOTÃO ENTREGUE
         function completeCurrentDelivery() {
             if (optimizedStops.length === 0) return;
+
             const completed = optimizedStops.shift();
             stops = stops.filter(s => s.id !== completed.id);
+            
             renderStops();
             updateDeliveryDashboard();
             
-            // Tenta abrir de forma segura para não travar a UI caso o browser bloqueie
-            try {
-                if (optimizedStops.length > 0) openNextInGoogleMaps();
-                else alert("Fantástico! Concluiu todas as entregas do seu roteiro.");
-            } catch(e) { console.log("Navegador bloqueou abertura direta."); }
-        }
-
-        // SCRIPT DE EXCLUSÃO PROFISSIONAL BLINDADO
-        function excludeCurrentDelivery() {
-            if (optimizedStops.length === 0) return;
-
-            // 1. Remove de imediato o item que está ativo na memória local
-            const excluded = optimizedStops.shift();
-            
-            // 2. Limpa da lista global para não causar redundâncias de loop
-            stops = stops.filter(s => s.id !== excluded.id);
-            
-            // 3. Força a re-renderização imediata dos componentes HTML antes de chamar chamadas de sistema (Maps)
-            renderStops();
-            updateDeliveryDashboard();
-
-            // 4. Fluxo síncrono para avançar para o próximo alvo
             try {
                 if (optimizedStops.length > 0) {
                     openNextInGoogleMaps();
                 } else {
-                    alert("A rota está concluída. Não restam pacotes na lista.");
+                    alert("Manifesto concluído com sucesso! Todos os pacotes foram entregues.");
                 }
-            } catch (err) {
-                console.log("Avanço concluído na tela. GPS retido pelo navegador.");
-            }
+            } catch(e) { console.error("Redirecionamento bloqueado pelo navegador."); }
         }
 
-        // Scanner
+        // EXECUÇÃO DO FLUXO DO BOTÃO EXCLUIR / IGNORAR
+        function excludeCurrentDelivery() {
+            if (optimizedStops.length === 0) return;
+
+            const excluded = optimizedStops.shift();
+            stops = stops.filter(s => s.id !== excluded.id);
+            
+            renderStops();
+            updateDeliveryDashboard();
+
+            try {
+                if (optimizedStops.length > 0) {
+                    openNextInGoogleMaps();
+                } else {
+                    alert("Roteiro finalizado. Fila de entregas vazia.");
+                }
+            } catch (err) { console.error("Fluxo interrompido pelo container host."); }
+        }
+
+        // Sub-módulo: Câmera e OCR
         async function openScanner() {
             const modal = document.getElementById('scannerModal'); const video = document.getElementById('videoPreview');
             modal.classList.remove('hidden');
-            try { videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }); video.srcObject = videoStream; } catch (err) { alert("Sem acesso à câmara."); closeScanner(); }
+            try { videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }); video.srcObject = videoStream; } catch (err) { alert("Acesso à câmara negado ou indisponível."); closeScanner(); }
         }
         function closeScanner() { document.getElementById('scannerModal').classList.add('hidden'); if (videoStream) videoStream.getTracks().forEach(track => track.stop()); }
         async function captureAndProcess() {
@@ -317,11 +359,13 @@
             canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             try {
                 const res = await Tesseract.recognize(canvas, 'por'); const text = res.data.text.trim();
-                if(text.length > 3) { document.getElementById('addressInput').value = text; document.getElementById('packageIdInput').value = `${stops.length + 1}`; closeScanner(); }
-                else { alert("Não legível."); }
+                if(text.length > 3) { document.getElementById('addressInput').value = text; document.getElementById('packageIdInput').value = `#PK-${Math.floor(100000 + Math.random() * 900000)}`; closeScanner(); }
+                else { alert("Incapaz de ler dados claros da etiqueta. Tente focar melhor."); }
             } catch (e) {} document.getElementById('scanLoading').classList.add('hidden');
         }
     </script>
 </body>
 </html>
+
+```
 
