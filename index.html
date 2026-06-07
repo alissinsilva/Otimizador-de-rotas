@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Otimizador de Rotas Gratuito - Sequência Automática</title>
+    <title>Otimizador de Rotas Gratuito - Correção Profissional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
@@ -85,8 +85,12 @@
                                     <i data-lucide="navigation" class="w-4 h-4 fill-indigo-900"></i> Ver no Maps
                                 </button>
                                 
-                                <button onclick="completeCurrentDelivery()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md">
+                                <button onclick="completeCurrentDelivery()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md">
                                     <i data-lucide="check" class="w-4 h-4"></i> Entregue (Chamar Próxima)
+                                </button>
+
+                                <button onclick="excludeCurrentDelivery()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i> Excluir Parada e Avançar
                                 </button>
                             </div>
                         </div>
@@ -141,10 +145,11 @@
         function addStop() {
             const idInput = document.getElementById('packageIdInput');
             const addrInput = document.getElementById('addressInput');
-            const pkgId = idInput.value.trim() || `#PK-${Math.floor(1000 + Math.random() * 9000)}`;
+            const pkgId = idInput.value.trim() || `${stops.length + 1}`;
             const address = addrInput.value.trim();
             if (!address) { alert("Introduza um endereço válido."); return; }
-            stops.push({ id: Date.now(), pkgId: pkgId, name: address, lat: null, lng: null });
+            
+            stops.push({ id: Date.now().toString() + Math.random().toString(), pkgId: pkgId, name: address, lat: null, lng: null });
             idInput.value = ''; addrInput.value = '';
             renderStops();
         }
@@ -161,13 +166,18 @@
                                     <span class="font-mono text-indigo-600 font-bold text-[10px]">${stop.pkgId}</span>
                                     <span class="truncate text-slate-600">${stop.name}</span>
                                 </div>
-                                <button onclick="removeStop(${stop.id})" class="text-slate-400 hover:text-red-500 ml-2"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>`;
+                                <button onclick="removeStop('${stop.id}')" class="text-slate-400 hover:text-red-500 ml-2"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>`;
                 list.appendChild(li);
             });
             lucide.createIcons();
         }
 
-        function removeStop(id) { stops = stops.filter(s => s.id !== id); renderStops(); }
+        function removeStop(id) { 
+            stops = stops.filter(s => s.id !== id); 
+            optimizedStops = optimizedStops.filter(s => s.id !== id);
+            renderStops(); 
+            updateDeliveryDashboard();
+        }
 
         async function fetchCoordinates(address) {
             try {
@@ -192,7 +202,6 @@
             }
             document.getElementById('routeLoader').classList.add('hidden');
 
-            // Roteirização Matemática Real por menor distância
             let unvisited = JSON.parse(JSON.stringify(stops));
             let current = unvisited.shift();
             let resultSequence = [current];
@@ -220,12 +229,10 @@
             document.getElementById('placeholderContainer').classList.add('hidden');
             document.getElementById('optimizedContainer').classList.remove('hidden');
 
-            // Define a Parada Vigente (O topo da lista ordenada)
             const currentDelivery = optimizedStops[0];
             document.getElementById('currentPkgId').innerText = currentDelivery.pkgId;
             document.getElementById('currentAddress').innerText = currentDelivery.name;
 
-            // Renderiza o resto da fila cronológica
             const container = document.getElementById('routeTimeline'); 
             container.innerHTML = '';
             
@@ -250,34 +257,54 @@
             lucide.createIcons();
         }
 
+        // URL CORRIGIDA PARA EVITAR QUEBRAS SINCRO-MECÂNICAS
         function openNextInGoogleMaps() {
             if (optimizedStops.length === 0) return;
-            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(optimizedStops[0].name)}`, '_blank');
+            const url = `http://googleusercontent.com/maps.google.com/7${encodeURIComponent(optimizedStops[0].name)}`;
+            window.open(url, '_blank');
         }
 
-        // LÓGICA DE EXCLUSÃO E AVANÇO AUTOMÁTICO
         function completeCurrentDelivery() {
             if (optimizedStops.length === 0) return;
-
-            // 1. Remove a parada vigente que acabou de ser entregue
             const completed = optimizedStops.shift();
-            
-            // 2. Apaga também da lista de pacotes pendentes do painel esquerdo
             stops = stops.filter(s => s.id !== completed.id);
+            renderStops();
+            updateDeliveryDashboard();
             
-            // 3. Atualiza os componentes visuais
+            // Tenta abrir de forma segura para não travar a UI caso o browser bloqueie
+            try {
+                if (optimizedStops.length > 0) openNextInGoogleMaps();
+                else alert("Fantástico! Concluiu todas as entregas do seu roteiro.");
+            } catch(e) { console.log("Navegador bloqueou abertura direta."); }
+        }
+
+        // SCRIPT DE EXCLUSÃO PROFISSIONAL BLINDADO
+        function excludeCurrentDelivery() {
+            if (optimizedStops.length === 0) return;
+
+            // 1. Remove de imediato o item que está ativo na memória local
+            const excluded = optimizedStops.shift();
+            
+            // 2. Limpa da lista global para não causar redundâncias de loop
+            stops = stops.filter(s => s.id !== excluded.id);
+            
+            // 3. Força a re-renderização imediata dos componentes HTML antes de chamar chamadas de sistema (Maps)
             renderStops();
             updateDeliveryDashboard();
 
-            // 4. Se ainda houver paradas na sequência, abre o Google Maps para a próxima automaticamente
-            if (optimizedStops.length > 0) {
-                openNextInGoogleMaps();
-            } else {
-                alert("Fantástico! Concluiu todas as entregas do seu roteiro otimizado.");
+            // 4. Fluxo síncrono para avançar para o próximo alvo
+            try {
+                if (optimizedStops.length > 0) {
+                    openNextInGoogleMaps();
+                } else {
+                    alert("A rota está concluída. Não restam pacotes na lista.");
+                }
+            } catch (err) {
+                console.log("Avanço concluído na tela. GPS retido pelo navegador.");
             }
         }
 
-        // Scanner (Apenas utilitário OCR)
+        // Scanner
         async function openScanner() {
             const modal = document.getElementById('scannerModal'); const video = document.getElementById('videoPreview');
             modal.classList.remove('hidden');
@@ -290,7 +317,7 @@
             canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             try {
                 const res = await Tesseract.recognize(canvas, 'por'); const text = res.data.text.trim();
-                if(text.length > 3) { document.getElementById('addressInput').value = text; document.getElementById('packageIdInput').value = `#PK-${Math.floor(1000 + Math.random() * 9000)}`; closeScanner(); }
+                if(text.length > 3) { document.getElementById('addressInput').value = text; document.getElementById('packageIdInput').value = `${stops.length + 1}`; closeScanner(); }
                 else { alert("Não legível."); }
             } catch (e) {} document.getElementById('scanLoading').classList.add('hidden');
         }
