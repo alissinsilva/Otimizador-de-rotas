@@ -1,371 +1,1391 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt-BR">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CircuitPro - Monitor de Rotas Profissional</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CircuitPro Professional</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+::-webkit-scrollbar{
+width:6px;
+}
+
+::-webkit-scrollbar-thumb{
+background:#334155;
+border-radius:20px;
+}
+
+.card{
+background:#111827;
+border:1px solid #1f2937;
+border-radius:20px;
+}
+
+</style>
+
 </head>
-<body class="bg-slate-900 font-sans text-slate-100 selection:bg-indigo-500 selection:text-white antialiased">
 
-    <div id="appContainer" class="min-h-screen flex flex-col lg:flex-row">
-        
-        <aside class="w-full lg:w-96 bg-slate-950 border-b lg:border-b-0 lg:border-r border-slate-800 p-6 flex flex-col justify-between shadow-2xl shrink-0">
-            <div>
-                <div class="flex items-center justify-between mb-8">
-                    <div class="flex items-center gap-2.5">
-                        <div class="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-600/30">
-                            <i data-lucide="navigation" class="w-5 h-5 text-white fill-white/10"></i>
-                        </div>
-                        <div>
-                            <span class="text-lg font-black tracking-tight text-white block">CircuitPro</span>
-                            <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider block">Logística Inteligente</span>
-                        </div>
-                    </div>
-                </div>
+<body>
 
-                <div class="space-y-4 mb-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-800/80">
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">ID do Pacote</label>
-                        <input type="text" id="packageIdInput" placeholder="Ex: #PK-9842" class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1.5">Endereço de Entrega</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="addressInput" placeholder="Ex: Av. da Liberdade, Lisboa" class="flex-1 px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition">
-                            <button onclick="addStop()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 rounded-xl transition flex items-center justify-center shadow-lg shadow-indigo-600/20 active:scale-95">
-                                <i data-lucide="plus" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <button onclick="openScanner()" class="w-full bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-2 active:scale-[0.99]">
-                        <i data-lucide="camera" class="w-4 h-4 text-indigo-400"></i> Escanear Etiqueta (OCR)
-                    </button>
-                </div>
+<div class="min-h-screen flex flex-col lg:flex-row">
 
-                <div class="flex flex-col">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fila de Carga Pendente</h3>
-                        <span id="counterBadge" class="bg-slate-800 text-slate-300 text-[10px] font-mono px-2 py-0.5 rounded-full border border-slate-700">0</span>
-                    </div>
-                    <ul id="stopsList" class="space-y-2 max-h-[32vh] overflow-y-auto pr-1 custom-scrollbar">
-                        <p id="emptyState" class="text-xs text-slate-500 italic text-center py-4">Nenhum pacote na fila de triagem.</p>
-                    </ul>
-                </div>
+<!-- MENU -->
+
+<aside class="w-full lg:w-96 bg-slate-950 border-r border-slate-800 p-5">
+
+<div class="flex items-center gap-3 mb-6">
+
+<div class="bg-indigo-600 p-3 rounded-xl">
+<i data-lucide="navigation"></i>
+</div>
+
+<div>
+<h1 class="font-black text-xl">
+CircuitPro
+</h1>
+
+<p class="text-xs text-indigo-400">
+Logística Inteligente
+</p>
+</div>
+
+</div>
+
+<!-- FORM -->
+
+<div class="card p-4 mb-5">
+
+<label class="text-xs block mb-1">
+ID DO PACOTE
+</label>
+
+<input
+id="packageIdInput"
+type="text"
+class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 mb-3"
+placeholder="#PK-001">
+
+<label class="text-xs block mb-1">
+ENDEREÇO
+</label>
+
+<input
+id="addressInput"
+type="text"
+class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 mb-3"
+placeholder="Digite o endereço">
+
+<div class="grid grid-cols-2 gap-2">
+
+<button
+onclick="addStop()"
+class="bg-indigo-600 p-3 rounded-xl font-bold">
+
+Adicionar
+</button>
+
+<button
+onclick="openScanner()"
+class="bg-slate-800 p-3 rounded-xl">
+
+OCR
+</button>
+
+</div>
+
+</div>
+
+<!-- IMPORTAÇÃO -->
+
+<div class="card p-4 mb-5">
+
+<h3 class="font-bold mb-3">
+Importar CSV
+</h3>
+
+<input
+type="file"
+id="csvFile"
+accept=".csv"
+class="w-full text-sm">
+
+<button
+onclick="importCSV()"
+class="mt-3 bg-emerald-600 p-3 rounded-xl w-full font-bold">
+
+Importar Lista
+</button>
+
+</div>
+
+<!-- ESTATÍSTICAS -->
+
+<div class="card p-4 mb-5">
+
+<h3 class="font-bold mb-4">
+Estatísticas
+</h3>
+
+<div class="grid grid-cols-3 gap-3">
+
+<div class="bg-slate-900 p-3 rounded-xl text-center">
+<div id="pendingCount" class="text-xl font-black">
+0
+</div>
+<div class="text-xs">
+Pendentes
+</div>
+</div>
+
+<div class="bg-slate-900 p-3 rounded-xl text-center">
+<div id="deliveredCount" class="text-xl font-black text-emerald-400">
+0
+</div>
+<div class="text-xs">
+Entregues
+</div>
+</div>
+
+<div class="bg-slate-900 p-3 rounded-xl text-center">
+<div id="totalCount" class="text-xl font-black text-indigo-400">
+0
+</div>
+<div class="text-xs">
+Total
+</div>
+</div>
+
+</div>
+
+</div>
+
+<button
+onclick="optimizeRouteLocal()"
+class="bg-emerald-600 w-full p-4 rounded-2xl font-black">
+
+ROTEIRIZAR AGORA
+</button>
+
+</aside>
+
+<!-- CONTEÚDO -->
+
+<main class="flex-1 p-5">
+
+<!-- GPS -->
+
+<div class="card p-4 mb-5">
+
+<div class="flex justify-between">
+
+<div>
+
+<h2 class="font-bold">
+Posição Atual
+</h2>
+
+<p id="gpsStatus"
+class="text-sm text-slate-400">
+Obtendo GPS...
+</p>
+
+</div>
+
+<div>
+
+<button
+onclick="getCurrentLocation()"
+class="bg-indigo-600 px-4 py-2 rounded-xl">
+
+Atualizar GPS
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ENTREGA ATUAL -->
+
+<div
+id="currentDeliveryPanel"
+class="card p-6 mb-5 hidden">
+
+<div class="flex justify-between mb-4">
+
+<div>
+
+<p class="text-xs text-indigo-400">
+ENTREGA ATUAL
+</p>
+
+<h2
+id="currentPkgId"
+class="text-2xl font-black">
+-
+</h2>
+
+</div>
+
+</div>
+
+<h3
+id="currentAddress"
+class="text-lg mb-5">
+-
+</h3>
+
+<div class="flex flex-wrap gap-3">
+
+<button
+onclick="openNextInGoogleMaps()"
+class="bg-indigo-600 px-5 py-3 rounded-xl font-bold">
+
+Abrir GPS
+</button>
+
+<button
+onclick="completeCurrentDelivery()"
+class="bg-emerald-600 px-5 py-3 rounded-xl font-bold">
+
+Entregue
+</button>
+
+<button
+onclick="excludeCurrentDelivery()"
+class="bg-red-600 px-5 py-3 rounded-xl font-bold">
+
+Excluir
+</button>
+
+</div>
+
+</div>
+
+<!-- PENDENTES -->
+
+<div class="card p-5 mb-5">
+
+<h2 class="font-bold mb-4">
+Pendentes
+</h2>
+
+<ul
+id="stopsList"
+class="space-y-2">
+</ul>
+
+</div>
+
+<!-- ENTREGUES -->
+
+<div class="card p-5 mb-5">
+
+<h2 class="font-bold text-emerald-400 mb-4">
+Entregues
+</h2>
+
+<ul
+id="deliveredList"
+class="space-y-2">
+</ul>
+
+</div>
+
+<!-- ROTA -->
+
+<div class="card p-5">
+
+<h2 class="font-bold mb-4">
+Sequência da Rota
+</h2>
+
+<div
+id="routeTimeline"
+class="space-y-3">
+</div>
+
+</div>
+
+</main>
+
+</div>
+
+<!-- MODAL OCR -->
+
+<div
+id="scannerModal"
+class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+
+<div class="bg-slate-900 rounded-2xl p-4 w-full max-w-md">
+
+<video
+id="videoPreview"
+autoplay
+playsinline
+class="w-full rounded-xl mb-3">
+</video>
+
+<div class="flex gap-2">
+
+<button
+onclick="captureAndProcess()"
+class="bg-indigo-600 p-3 rounded-xl flex-1">
+
+Capturar
+</button>
+
+<button
+onclick="closeScanner()"
+class="bg-red-600 p-3 rounded-xl flex-1">
+
+Fechar
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<canvas id="hiddenCanvas" class="hidden"></canvas>
+<script>
+
+lucide.createIcons();
+
+/* =========================
+   VARIÁVEIS GLOBAIS
+========================= */
+
+let stops = [];
+let optimizedStops = [];
+let deliveredStops = [];
+
+let currentLatitude = null;
+let currentLongitude = null;
+
+let videoStream = null;
+
+/* =========================
+   LOCAL STORAGE
+========================= */
+
+function saveData() {
+
+    localStorage.setItem(
+        "circuitpro_stops",
+        JSON.stringify(stops)
+    );
+
+    localStorage.setItem(
+        "circuitpro_delivered",
+        JSON.stringify(deliveredStops)
+    );
+
+    localStorage.setItem(
+        "circuitpro_route",
+        JSON.stringify(optimizedStops)
+    );
+}
+
+function loadData() {
+
+    const savedStops =
+        localStorage.getItem("circuitpro_stops");
+
+    const savedDelivered =
+        localStorage.getItem("circuitpro_delivered");
+
+    const savedRoute =
+        localStorage.getItem("circuitpro_route");
+
+    if(savedStops)
+        stops = JSON.parse(savedStops);
+
+    if(savedDelivered)
+        deliveredStops =
+        JSON.parse(savedDelivered);
+
+    if(savedRoute)
+        optimizedStops =
+        JSON.parse(savedRoute);
+
+    renderStops();
+    renderDelivered();
+    updateStats();
+    updateDeliveryDashboard();
+}
+
+/* =========================
+   ADICIONAR ENTREGA
+========================= */
+
+function addStop() {
+
+    const pkgInput =
+        document.getElementById(
+            "packageIdInput"
+        );
+
+    const addrInput =
+        document.getElementById(
+            "addressInput"
+        );
+
+    let pkgId =
+        pkgInput.value.trim();
+
+    let address =
+        addrInput.value.trim();
+
+    if(address === "") {
+
+        alert(
+            "Digite um endereço."
+        );
+
+        return;
+    }
+
+    if(pkgId === "") {
+
+        pkgId =
+        "#PK-" +
+        Math.floor(
+            100000 +
+            Math.random() * 900000
+        );
+    }
+
+    const stop = {
+
+        id:
+        Date.now().toString(),
+
+        pkgId,
+
+        name: address,
+
+        lat:null,
+        lng:null
+    };
+
+    stops.push(stop);
+
+    pkgInput.value = "";
+    addrInput.value = "";
+
+    renderStops();
+    updateStats();
+    saveData();
+}
+
+/* =========================
+   REMOVER PENDENTE
+========================= */
+
+function removeStop(id){
+
+    stops =
+    stops.filter(
+        stop => stop.id !== id
+    );
+
+    optimizedStops =
+    optimizedStops.filter(
+        stop => stop.id !== id
+    );
+
+    renderStops();
+    updateStats();
+    saveData();
+}
+
+/* =========================
+   RENDER PENDENTES
+========================= */
+
+function renderStops() {
+
+    const list =
+    document.getElementById(
+        "stopsList"
+    );
+
+    list.innerHTML = "";
+
+    if(stops.length === 0){
+
+        list.innerHTML =
+        `
+        <li class="text-slate-500 text-sm">
+        Nenhuma entrega pendente
+        </li>
+        `;
+
+        return;
+    }
+
+    stops.forEach(stop => {
+
+        const li =
+        document.createElement("li");
+
+        li.className =
+        "bg-slate-900 p-3 rounded-xl flex justify-between items-center";
+
+        li.innerHTML = `
+        <div>
+            <div class="font-bold text-indigo-400">
+                ${stop.pkgId}
             </div>
 
-            <div class="mt-6 pt-4 border-t border-slate-800">
-                <button onclick="optimizeRouteLocal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-2xl shadow-xl shadow-emerald-900/20 transition flex items-center justify-center gap-2 text-sm active:scale-[0.98]">
-                    <i data-lucide="activity" class="w-4 h-4"></i> Roteirizar Sequência Otimizada
-                </button>
-            </div>
-        </aside>
-
-        <main class="flex-1 bg-slate-900 p-4 md:p-8 lg:p-12 flex flex-col justify-between overflow-y-auto">
-            <div class="max-w-4xl w-full mx-auto flex flex-col flex-1">
-                
-                <div class="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
-                    <h2 class="text-md font-bold text-slate-200 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Terminal de Bordo Ativo
-                    </h2>
-                    <span class="text-xs text-slate-500 font-medium" id="liveClock">Status: Pronto</span>
-                </div>
-
-                <div id="routeLoader" class="hidden flex-col items-center justify-center py-20 gap-4 bg-slate-950/40 rounded-3xl border border-slate-800">
-                    <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <div class="text-center">
-                        <p class="text-sm font-bold text-slate-200">Mapeando Matriz de Distância Real...</p>
-                        <p class="text-xs text-slate-500 mt-1">Consultando servidores de coordenadas cartográficas...</p>
-                    </div>
-                </div>
-
-                <div id="optimizedContainer" class="hidden space-y-6">
-                    
-                    <div id="currentDeliveryPanel" class="bg-gradient-to-br from-indigo-700 to-indigo-950 text-white rounded-3xl p-6 lg:p-8 shadow-2xl relative border border-indigo-500/20 overflow-hidden">
-                        <div class="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
-                            <i data-lucide="truck" class="w-48 h-48"></i>
-                        </div>
-                        
-                        <div class="flex items-center justify-between mb-4">
-                            <span class="bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-400/20 block">PARADA VIGENTE ATUAL</span>
-                            <span class="text-xs font-mono text-indigo-300/80 bg-slate-950/40 px-2.5 py-0.5 rounded-md border border-slate-800">Destino #1</span>
-                        </div>
-                        
-                        <div class="space-y-2">
-                            <h3 id="currentPkgId" class="text-2xl font-mono font-black tracking-wider text-white">#PK-0000</h3>
-                            <p id="currentAddress" class="text-base text-indigo-100 font-medium leading-relaxed max-w-xl">Aguardando definição...</p>
-                        </div>
-
-                        <div class="mt-8 pt-6 border-t border-indigo-500/20 flex flex-wrap gap-3">
-                            <button onclick="openNextInGoogleMaps()" class="bg-white hover:bg-slate-100 text-slate-950 font-bold px-5 py-3 rounded-xl text-xs transition flex items-center gap-2 shadow-lg active:scale-95">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-indigo-600 fill-indigo-600/20"></i> Iniciar Navegação GPS
-                            </button>
-                            
-                            <button onclick="completeCurrentDelivery()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-3 rounded-xl text-xs transition flex items-center gap-2 shadow-lg shadow-emerald-950/20 active:scale-95">
-                                <i data-lucide="check-circle" class="w-4 h-4"></i> Baixar Entrega (Concluído)
-                            </button>
-
-                            <button onclick="excludeCurrentDelivery()" class="bg-rose-600/90 hover:bg-rose-600 text-white font-bold px-5 py-3 rounded-xl text-xs transition flex items-center gap-2 shadow-lg shadow-rose-950/20 active:scale-95">
-                                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Ignorar / Excluir Parada
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-950 border border-slate-800 rounded-3xl p-6">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-                            <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i> Próximos Destinos na Sequência Inteligente
-                        </h3>
-                        <div class="relative pl-6 border-l-2 border-slate-800 ml-2 space-y-6" id="routeTimeline">
-                            </div>
-                    </div>
-                </div>
-
-                <div id="placeholderContainer" class="flex-1 min-h-[45vh] flex flex-col items-center justify-center bg-slate-950/20 border border-dashed border-slate-800 rounded-3xl p-8 text-center text-slate-500">
-                    <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 mb-4 shadow-xl">
-                        <i data-lucide="box" class="w-8 h-8 text-slate-600"></i>
-                    </div>
-                    <h3 class="text-sm font-bold text-slate-300 mb-1">Aguardando Roteirização</h3>
-                    <p class="text-xs text-slate-500 max-w-xs leading-relaxed">Adicione os endereços dos manifestos de carga no menu lateral e clique em Roteirizar para ordenar por menor KM.</p>
-                </div>
-
-            </div>
-        </main>
-    </div>
-
-    <div id="scannerModal" class="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm">
-        <div class="bg-slate-900 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col">
-            <div class="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2"><i data-lucide="scan-text" class="w-4 h-4 text-indigo-400"></i> Leitor Inteligente de Etiquetas</span>
-                <button onclick="closeScanner()" class="text-slate-500 hover:text-slate-300 transition"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="relative bg-black aspect-[4/3] flex items-center justify-center overflow-hidden">
-                <video id="videoPreview" autoplay playsinline class="w-full h-full object-cover"></video>
-                <div class="absolute border-2 border-dashed border-indigo-500 w-4/5 h-2/5 rounded-2xl pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
-                <div id="scanLoading" class="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center text-white gap-2 hidden">
-                    <div class="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <p class="text-[11px] font-bold text-slate-300 tracking-wider uppercase">Processando texto da imagem...</p>
-                </div>
-            </div>
-            <div class="p-4 bg-slate-950 flex gap-2 justify-end border-t border-slate-800">
-                <button onclick="closeScanner()" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:bg-slate-900 rounded-xl transition">Cancelar</button>
-                <button onclick="captureAndProcess()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1.5 shadow-lg active:scale-95">
-                    <i data-lucide="aperture" class="w-4 h-4"></i> Capturar Texto
-                </button>
+            <div class="text-sm">
+                ${stop.name}
             </div>
         </div>
-    </div>
-    <canvas id="hiddenCanvas" class="hidden"></canvas>
 
-    <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
-    </style>
+        <button
+        onclick="removeStop('${stop.id}')"
+        class="bg-red-600 px-3 py-2 rounded-lg">
 
-    <script>
-        // Inicializar ícones do pacote Lucide
-        lucide.createIcons();
-        
-        let stops = [];
-        let optimizedStops = [];
-        let videoStream = null;
+        X
 
-        function addStop() {
-            const idInput = document.getElementById('packageIdInput');
-            const addrInput = document.getElementById('addressInput');
-            const pkgId = idInput.value.trim() || `#PK-${Math.floor(100000 + Math.random() * 900000)}`;
-            const address = addrInput.value.trim();
-            
-            if (!address) { alert("Introduza um endereço válido para entrega."); return; }
-            
-            // Definição rígida de ID único como String para prevenir falhas de busca relacional
-            stops.push({ id: String(Date.now()) + String(Math.floor(Math.random() * 100)), pkgId: pkgId, name: address, lat: null, lng: null });
-            idInput.value = ''; addrInput.value = '';
-            renderStops();
-        }
+        </button>
+        `;
 
-        function renderStops() {
-            const list = document.getElementById('stopsList');
-            const empty = document.getElementById('emptyState');
-            const badge = document.getElementById('counterBadge');
-            
-            badge.innerText = stops.length;
-            if(stops.length === 0) { empty.style.display = 'block'; list.innerHTML = ''; list.appendChild(empty); return; }
-            
-            empty.style.display = 'none'; list.innerHTML = '';
-            stops.forEach((stop) => {
-                const li = document.createElement('li');
-                li.className = "flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-slate-300 transition hover:border-slate-700";
-                li.innerHTML = `<div class="truncate pr-2 flex flex-col max-w-[80%]">
-                                    <span class="font-mono text-indigo-400 font-black text-[10px]">${stop.pkgId}</span>
-                                    <span class="truncate text-slate-300 mt-0.5">${stop.name}</span>
-                                </div>
-                                <button onclick="removeStop('${stop.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded-lg hover:bg-slate-950 transition"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>`;
-                list.appendChild(li);
-            });
-            lucide.createIcons();
-        }
+        list.appendChild(li);
 
-        function removeStop(id) { 
-            stops = stops.filter(s => s.id !== String(id)); 
-            optimizedStops = optimizedStops.filter(s => s.id !== String(id));
-            renderStops(); 
-            updateDeliveryDashboard();
-        }
+    });
+}
 
-        async function fetchCoordinates(address) {
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
-                const data = await response.json();
-                if (data && data.length > 0) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-            } catch (e) {}
-            // Fallback determinístico pseudo-aleatório em caso de falha de API
-            return { lat: -23.5 + Math.random(), lng: -46.6 + Math.random() };
-        }
+/* =========================
+   RENDER ENTREGUES
+========================= */
 
-        async function optimizeRouteLocal() {
-            if (stops.length === 0) { alert("A fila de carga está vazia. Adicione pacotes primeiro."); return; }
-            
-            document.getElementById('placeholderContainer').classList.add('hidden');
-            document.getElementById('optimizedContainer').classList.add('hidden');
-            document.getElementById('routeLoader').classList.remove('hidden');
+function renderDelivered() {
 
-            for (let i = 0; i < stops.length; i++) {
-                if (!stops[i].lat) {
-                    const coords = await fetchCoordinates(stops[i].name);
-                    stops[i].lat = coords.lat; stops[i].lng = coords.lng;
-                }
+    const list =
+    document.getElementById(
+        "deliveredList"
+    );
+
+    list.innerHTML = "";
+
+    if(deliveredStops.length === 0){
+
+        list.innerHTML =
+        `
+        <li class="text-slate-500 text-sm">
+        Nenhuma entrega concluída
+        </li>
+        `;
+
+        return;
+    }
+
+    deliveredStops.forEach(stop => {
+
+        const li =
+        document.createElement("li");
+
+        li.className =
+        "bg-emerald-950 p-3 rounded-xl border border-emerald-800";
+
+        li.innerHTML = `
+        <div class="flex justify-between">
+
+            <div>
+
+                <div class="font-bold text-emerald-400">
+                    ${stop.pkgId}
+                </div>
+
+                <div class="text-sm text-white">
+                    ${stop.name}
+                </div>
+
+            </div>
+
+            <button
+            onclick="reopenDelivery('${stop.id}')"
+            class="bg-amber-500 text-black px-3 py-2 rounded-lg">
+
+            Reabrir
+
+            </button>
+
+        </div>
+        `;
+
+        list.appendChild(li);
+
+    });
+}
+
+/* =========================
+   REABRIR ENTREGA
+========================= */
+
+function reopenDelivery(id){
+
+    const item =
+    deliveredStops.find(
+        stop => stop.id === id
+    );
+
+    if(!item) return;
+
+    deliveredStops =
+    deliveredStops.filter(
+        stop => stop.id !== id
+    );
+
+    stops.push(item);
+
+    renderDelivered();
+    renderStops();
+    updateStats();
+    saveData();
+}
+
+/* =========================
+   ESTATÍSTICAS
+========================= */
+
+function updateStats(){
+
+    document.getElementById(
+        "pendingCount"
+    ).innerText =
+    stops.length;
+
+    document.getElementById(
+        "deliveredCount"
+    ).innerText =
+    deliveredStops.length;
+
+    document.getElementById(
+        "totalCount"
+    ).innerText =
+    stops.length +
+    deliveredStops.length;
+}
+
+/* =========================
+   MARCAR COMO ENTREGUE
+========================= */
+
+function completeCurrentDelivery(){
+
+    if(
+        optimizedStops.length === 0
+    ){
+        return;
+    }
+
+    const completed =
+    optimizedStops.shift();
+
+    deliveredStops.push(
+        completed
+    );
+
+    stops =
+    stops.filter(
+        stop =>
+        stop.id !== completed.id
+    );
+
+    renderStops();
+    renderDelivered();
+    updateStats();
+
+    saveData();
+
+    updateDeliveryDashboard();
+
+    if(
+        optimizedStops.length > 0
+    ){
+
+        setTimeout(() => {
+
+            openNextInGoogleMaps();
+
+        },500);
+
+    }
+    else{
+
+        alert(
+            "Todas as entregas foram concluídas."
+        );
+    }
+}
+
+/* =========================
+   EXCLUIR ENTREGA ATUAL
+========================= */
+
+function excludeCurrentDelivery(){
+
+    if(
+        optimizedStops.length === 0
+    ){
+        return;
+    }
+
+    const removed =
+    optimizedStops.shift();
+
+    stops =
+    stops.filter(
+        stop =>
+        stop.id !== removed.id
+    );
+
+    renderStops();
+
+    updateStats();
+
+    saveData();
+
+    updateDeliveryDashboard();
+}
+
+/* =========================
+   IMPORTAÇÃO CSV
+========================= */
+
+function importCSV(){
+
+    const file =
+    document.getElementById(
+        "csvFile"
+    ).files[0];
+
+    if(!file){
+
+        alert(
+            "Selecione um CSV."
+        );
+
+        return;
+    }
+
+    const reader =
+    new FileReader();
+
+    reader.onload =
+    function(event){
+
+        const rows =
+        event.target.result
+        .split("\n");
+
+        rows.forEach(row => {
+
+            const cols =
+            row.split(",");
+
+            if(cols.length >= 2){
+
+                stops.push({
+
+                    id:
+                    Date.now() +
+                    Math.random()
+                    .toString(),
+
+                    pkgId:
+                    cols[0].trim(),
+
+                    name:
+                    cols[1].trim(),
+
+                    lat:null,
+                    lng:null
+                });
+
             }
-            document.getElementById('routeLoader').classList.add('hidden');
 
-            // Deep Clone para processamento sem efeitos colaterais
-            let unvisited = JSON.parse(JSON.stringify(stops));
-            let current = unvisited.shift();
-            let resultSequence = [current];
+        });
 
-            // Algoritmo do Vizinho Mais Próximo (Solução eficiente local do problema TSP)
-            while (unvisited.length > 0) {
-                let nearIdx = 0; let minDist = Infinity;
-                for (let i = 0; i < unvisited.length; i++) {
-                    let d = Math.sqrt(Math.pow(current.lat - unvisited[i].lat, 2) + Math.pow(current.lng - unvisited[i].lng, 2));
-                    if (d < minDist) { minDist = d; nearIdx = i; }
-                }
-                current = unvisited.splice(nearIdx, 1)[0];
-                resultSequence.push(current);
+        renderStops();
+        updateStats();
+        saveData();
+
+        alert(
+            "Importação concluída."
+        );
+    };
+
+    reader.readAsText(file);
+}
+
+/* =========================
+   INICIALIZAÇÃO
+========================= */
+
+loadData();
+
+            </script>
+            <script>
+
+/* ==========================================
+   GPS DO MOTORISTA
+========================================== */
+
+function getCurrentLocation(){
+
+    const status =
+    document.getElementById(
+        "gpsStatus"
+    );
+
+    status.innerText =
+    "Obtendo localização...";
+
+    if(!navigator.geolocation){
+
+        status.innerText =
+        "GPS não suportado";
+
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+
+        function(position){
+
+            currentLatitude =
+            position.coords.latitude;
+
+            currentLongitude =
+            position.coords.longitude;
+
+            status.innerText =
+            `Lat: ${currentLatitude.toFixed(5)}
+             | Lng: ${currentLongitude.toFixed(5)}`;
+
+        },
+
+        function(){
+
+            status.innerText =
+            "Falha ao obter GPS";
+        },
+
+        {
+            enableHighAccuracy:true,
+            timeout:10000,
+            maximumAge:0
+        }
+
+    );
+}
+
+/* ==========================================
+   GEOCODIFICAÇÃO OSM
+========================================== */
+
+async function fetchCoordinates(address){
+
+    try{
+
+        const response =
+        await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+        );
+
+        const data =
+        await response.json();
+
+        if(data.length > 0){
+
+            return {
+
+                lat:
+                parseFloat(data[0].lat),
+
+                lng:
+                parseFloat(data[0].lon)
+
+            };
+        }
+
+    }catch(error){
+
+        console.error(error);
+    }
+
+    return null;
+}
+
+/* ==========================================
+   DISTÂNCIA HAVERSINE
+========================================== */
+
+function calculateDistance(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+){
+
+    const R = 6371;
+
+    const dLat =
+    (lat2 - lat1) *
+    Math.PI / 180;
+
+    const dLon =
+    (lon2 - lon1) *
+    Math.PI / 180;
+
+    const a =
+    Math.sin(dLat/2) *
+    Math.sin(dLat/2)
+    +
+    Math.cos(lat1*Math.PI/180)
+    *
+    Math.cos(lat2*Math.PI/180)
+    *
+    Math.sin(dLon/2)
+    *
+    Math.sin(dLon/2);
+
+    const c =
+    2 *
+    Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1-a)
+    );
+
+    return R * c;
+}
+
+/* ==========================================
+   ROTEIRIZAÇÃO PROFISSIONAL
+========================================== */
+
+async function optimizeRouteLocal(){
+
+    if(stops.length === 0){
+
+        alert(
+            "Adicione entregas primeiro."
+        );
+
+        return;
+    }
+
+    if(
+        currentLatitude === null ||
+        currentLongitude === null
+    ){
+
+        alert(
+            "Atualize o GPS antes."
+        );
+
+        return;
+    }
+
+    for(let stop of stops){
+
+        if(
+            stop.lat === null
+        ){
+
+            const coords =
+            await fetchCoordinates(
+                stop.name
+            );
+
+            if(coords){
+
+                stop.lat =
+                coords.lat;
+
+                stop.lng =
+                coords.lng;
+            }
+        }
+    }
+
+    let unvisited =
+    [...stops];
+
+    let currentPoint = {
+
+        lat:currentLatitude,
+        lng:currentLongitude
+
+    };
+
+    let route = [];
+
+    while(
+        unvisited.length > 0
+    ){
+
+        let nearestIndex = 0;
+
+        let nearestDistance =
+        Infinity;
+
+        for(
+            let i = 0;
+            i < unvisited.length;
+            i++
+        ){
+
+            const stop =
+            unvisited[i];
+
+            const dist =
+            calculateDistance(
+
+                currentPoint.lat,
+                currentPoint.lng,
+
+                stop.lat,
+                stop.lng
+
+            );
+
+            if(
+                dist <
+                nearestDistance
+            ){
+
+                nearestDistance =
+                dist;
+
+                nearestIndex =
+                i;
+            }
+        }
+
+        const nextStop =
+        unvisited.splice(
+            nearestIndex,
+            1
+        )[0];
+
+        route.push(
+            nextStop
+        );
+
+        currentPoint = {
+
+            lat:nextStop.lat,
+            lng:nextStop.lng
+        };
+    }
+
+    optimizedStops =
+    route;
+
+    saveData();
+
+    updateDeliveryDashboard();
+
+    alert(
+        "Rota otimizada com sucesso."
+    );
+}
+
+/* ==========================================
+   DASHBOARD DA ENTREGA
+========================================== */
+
+function updateDeliveryDashboard(){
+
+    const panel =
+    document.getElementById(
+        "currentDeliveryPanel"
+    );
+
+    const routeList =
+    document.getElementById(
+        "routeTimeline"
+    );
+
+    if(
+        optimizedStops.length === 0
+    ){
+
+        panel.classList.add(
+            "hidden"
+        );
+
+        routeList.innerHTML =
+        `
+        <div class="text-slate-500">
+        Nenhuma rota ativa.
+        </div>
+        `;
+
+        return;
+    }
+
+    panel.classList.remove(
+        "hidden"
+    );
+
+    const current =
+    optimizedStops[0];
+
+    document.getElementById(
+        "currentPkgId"
+    ).innerText =
+    current.pkgId;
+
+    document.getElementById(
+        "currentAddress"
+    ).innerText =
+    current.name;
+
+    routeList.innerHTML = "";
+
+    optimizedStops.forEach(
+
+        (stop,index)=>{
+
+            const item =
+            document.createElement(
+                "div"
+            );
+
+            item.className =
+            "bg-slate-900 p-3 rounded-xl";
+
+            item.innerHTML =
+            `
+            <div class="text-indigo-400 font-bold">
+            ${index+1}
+            </div>
+
+            <div class="font-bold">
+            ${stop.pkgId}
+            </div>
+
+            <div class="text-sm">
+            ${stop.name}
+            </div>
+            `;
+
+            routeList.appendChild(
+                item
+            );
+        }
+    );
+}
+
+/* ==========================================
+   GOOGLE MAPS
+========================================== */
+
+function openNextInGoogleMaps(){
+
+    if(
+        optimizedStops.length === 0
+    ){
+        return;
+    }
+
+    const stop =
+    optimizedStops[0];
+
+    const url =
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.name)}`;
+
+    window.open(
+        url,
+        "_blank"
+    );
+}
+
+/* ==========================================
+   OCR - ABRIR CÂMERA
+========================================== */
+
+async function openScanner(){
+
+    try{
+
+        videoStream =
+        await navigator
+        .mediaDevices
+        .getUserMedia({
+
+            video:{
+                facingMode:"environment"
             }
 
-            optimizedStops = resultSequence;
-            updateDeliveryDashboard();
+        });
+
+        document
+        .getElementById(
+            "scannerModal"
+        )
+        .classList
+        .remove("hidden");
+
+        document
+        .getElementById(
+            "videoPreview"
+        )
+        .srcObject =
+        videoStream;
+
+    }
+    catch(error){
+
+        alert(
+            "Erro ao abrir câmera."
+        );
+    }
+}
+
+/* ==========================================
+   FECHAR CÂMERA
+========================================== */
+
+function closeScanner(){
+
+    if(videoStream){
+
+        videoStream
+        .getTracks()
+        .forEach(
+            track =>
+            track.stop()
+        );
+    }
+
+    document
+    .getElementById(
+        "scannerModal"
+    )
+    .classList
+    .add("hidden");
+}
+
+/* ==========================================
+   OCR TESSERACT
+========================================== */
+
+async function captureAndProcess(){
+
+    const video =
+    document.getElementById(
+        "videoPreview"
+    );
+
+    const canvas =
+    document.getElementById(
+        "hiddenCanvas"
+    );
+
+    const ctx =
+    canvas.getContext("2d");
+
+    canvas.width =
+    video.videoWidth;
+
+    canvas.height =
+    video.videoHeight;
+
+    ctx.drawImage(
+        video,
+        0,
+        0
+    );
+
+    try{
+
+        const result =
+        await Tesseract
+        .recognize(
+            canvas,
+            "por"
+        );
+
+        const text =
+        result.data.text
+        .trim();
+
+        if(
+            text.length > 3
+        ){
+
+            document
+            .getElementById(
+                "addressInput"
+            )
+            .value =
+            text;
+
+            closeScanner();
+
+            alert(
+                "Texto capturado."
+            );
+        }
+        else{
+
+            alert(
+                "Texto não identificado."
+            );
         }
 
-        function updateDeliveryDashboard() {
-            if (optimizedStops.length === 0) {
-                document.getElementById('optimizedContainer').classList.add('hidden');
-                document.getElementById('placeholderContainer').classList.remove('hidden');
-                return;
-            }
-            document.getElementById('placeholderContainer').classList.add('hidden');
-            document.getElementById('optimizedContainer').classList.remove('hidden');
+    }
+    catch(error){
 
-            // Define e expõe a parada vigente ativa
-            const currentDelivery = optimizedStops[0];
-            document.getElementById('currentPkgId').innerText = currentDelivery.pkgId;
-            document.getElementById('currentAddress').innerText = currentDelivery.name;
+        alert(
+            "Falha no OCR."
+        );
+    }
+}
 
-            // Renderização da Linha do Tempo/Fila Otimizada de Próximos Alvos
-            const container = document.getElementById('routeTimeline'); 
-            container.innerHTML = '';
-            
-            if (optimizedStops.length === 1) {
-                container.innerHTML = `<p class="text-xs text-slate-500 italic py-2">Fase terminal da rota. Esta é a última paragem do trajeto.</p>`;
-            } else {
-                for(let i = 1; i < optimizedStops.length; i++) {
-                    const stop = optimizedStops[i];
-                    const div = document.createElement('div');
-                    div.className = "relative pl-2 text-xs group transition hover:translate-x-0.5";
-                    div.innerHTML = `
-                        <div class="absolute -left-[31px] top-0.5 bg-slate-800 text-slate-400 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-mono font-bold ring-4 ring-slate-950 border border-slate-700 group-hover:border-indigo-500 transition">
-                            ${i}
-                        </div>
-                        <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-900 transition hover:border-slate-800/80">
-                            <span class="font-mono text-indigo-400 font-bold text-[10px]">${stop.pkgId}</span>
-                            <h4 class="font-bold text-slate-300 mt-0.5">${stop.name}</h4>
-                        </div>`;
-                    container.appendChild(div);
-                }
-            }
-            lucide.createIcons();
-        }
+/* ==========================================
+   INICIALIZAÇÃO
+========================================== */
 
-        // DISPARADOR NATIVO CORRIGIDO SEM SINTAXE DE QUEBRA INTERNA
-        function openNextInGoogleMaps() {
-            if (optimizedStops.length === 0) return;
-            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(optimizedStops[0].name)}`;
-            window.open(url, '_blank');
-        }
+window.onload = () => {
 
-        // EXECUÇÃO DO FLUXO DO BOTÃO ENTREGUE
-        function completeCurrentDelivery() {
-            if (optimizedStops.length === 0) return;
+    getCurrentLocation();
 
-            const completed = optimizedStops.shift();
-            stops = stops.filter(s => s.id !== completed.id);
-            
-            renderStops();
-            updateDeliveryDashboard();
-            
-            try {
-                if (optimizedStops.length > 0) {
-                    openNextInGoogleMaps();
-                } else {
-                    alert("Manifesto concluído com sucesso! Todos os pacotes foram entregues.");
-                }
-            } catch(e) { console.error("Redirecionamento bloqueado pelo navegador."); }
-        }
+    updateStats();
 
-        // EXECUÇÃO DO FLUXO DO BOTÃO EXCLUIR / IGNORAR
-        function excludeCurrentDelivery() {
-            if (optimizedStops.length === 0) return;
+    renderStops();
 
-            const excluded = optimizedStops.shift();
-            stops = stops.filter(s => s.id !== excluded.id);
-            
-            renderStops();
-            updateDeliveryDashboard();
+    renderDelivered();
 
-            try {
-                if (optimizedStops.length > 0) {
-                    openNextInGoogleMaps();
-                } else {
-                    alert("Roteiro finalizado. Fila de entregas vazia.");
-                }
-            } catch (err) { console.error("Fluxo interrompido pelo container host."); }
-        }
+    updateDeliveryDashboard();
 
-        // Sub-módulo: Câmera e OCR
-        async function openScanner() {
-            const modal = document.getElementById('scannerModal'); const video = document.getElementById('videoPreview');
-            modal.classList.remove('hidden');
-            try { videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }); video.srcObject = videoStream; } catch (err) { alert("Acesso à câmara negado ou indisponível."); closeScanner(); }
-        }
-        function closeScanner() { document.getElementById('scannerModal').classList.add('hidden'); if (videoStream) videoStream.getTracks().forEach(track => track.stop()); }
-        async function captureAndProcess() {
-            const video = document.getElementById('videoPreview'); const canvas = document.getElementById('hiddenCanvas'); const ctx = canvas.getContext('2d');
-            if (!videoStream) return; document.getElementById('scanLoading').classList.remove('hidden');
-            canvas.width = video.videoWidth; canvas.height = video.videoHeight; ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            try {
-                const res = await Tesseract.recognize(canvas, 'por'); const text = res.data.text.trim();
-                if(text.length > 3) { document.getElementById('addressInput').value = text; document.getElementById('packageIdInput').value = `#PK-${Math.floor(100000 + Math.random() * 900000)}`; closeScanner(); }
-                else { alert("Incapaz de ler dados claros da etiqueta. Tente focar melhor."); }
-            } catch (e) {} document.getElementById('scanLoading').classList.add('hidden');
-        }
-    </script>
+    lucide.createIcons();
+};
+
+</script>
+
 </body>
 </html>
-
-```
-
