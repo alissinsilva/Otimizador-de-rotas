@@ -1,1546 +1,599 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>CircuitPro Enterprise V2</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<style>
-
-body{
-    background:#0f172a;
-    color:white;
-    overflow:hidden;
-}
-
-.card{
-    background:#111827;
-    border:1px solid #1f2937;
-    border-radius:18px;
-}
-
-#map{
-    height:100%;
-    width:100%;
-}
-
-::-webkit-scrollbar{
-    width:6px;
-}
-
-::-webkit-scrollbar-thumb{
-    background:#334155;
-    border-radius:20px;
-}
-
-/* Marcador Numerado */
-
-.marker-number{
-    width:36px;
-    height:36px;
-    border-radius:50%;
-    background:#ef4444;
-    color:white;
-    font-weight:bold;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border:3px solid white;
-    box-shadow:0 0 12px rgba(0,0,0,.4);
-}
-
-/* Entrega Atual */
-
-.entrega-atual{
-    border:2px solid #4f46e5;
-    background:rgba(79,70,229,.15);
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CircuitPro Enterprise V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body{
+            background:#0f172a;
+            color:white;
+            overflow:hidden;
+        }
+        .card{
+            background:#111827;
+            border:1px solid #1f2937;
+            border-radius:18px;
+        }
+        #map{
+            height:100%;
+            width:100%;
+        }
+        ::-webkit-scrollbar{
+            width:6px;
+        }
+        ::-webkit-scrollbar-thumb{
+            background:#334155;
+            border-radius:20px;
+        }
+        .marker-number{
+            width:36px;
+            height:36px;
+            border-radius:50%;
+            background:#ef4444;
+            color:white;
+            font-weight:bold;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border:3px solid white;
+            box-shadow:0 0 12px rgba(0,0,0,.4);
+        }
+        .entrega-atual{
+            border:2px solid #4f46e5;
+            background:rgba(79,70,229,.15);
+        }
+    </style>
 </head>
 <body>
-
-<div class="h-screen flex flex-col lg:flex-row">
-
-<!-- SIDEBAR -->
-
-<aside
-class="w-full lg:w-96 bg-slate-950 border-r border-slate-800 p-5 overflow-y-auto">
-
-<div class="flex items-center gap-3 mb-6">
-
-<div class="bg-indigo-600 p-3 rounded-xl">
-🚚
-</div>
-
-<div>
-<h1 class="font-black text-2xl">
-CircuitPro Enterprise
-</h1>
-
-<p class="text-xs text-indigo-400">
-Menor Quilometragem Inteligente
-</p>
-</div>
-
-</div>
-
-<!-- NOVA ENTREGA -->
-
-<div class="card p-4 mb-5">
-
-<h3 class="font-bold mb-3">
-Nova Entrega
-</h3>
-
-<input
-id="packageId"
-type="text"
-placeholder="ID do pacote"
-class="w-full p-3 mb-3 rounded-xl bg-slate-900 border border-slate-700">
-
-<input
-id="address"
-type="text"
-placeholder="Endereço completo"
-class="w-full p-3 mb-3 rounded-xl bg-slate-900 border border-slate-700">
-
-<div class="grid grid-cols-2 gap-2">
-
-<button
-onclick="addDelivery()"
-class="bg-indigo-600 p-3 rounded-xl font-bold">
-
-Adicionar
-
-</button>
-
-<button
-onclick="clearFields()"
-class="bg-amber-600 p-3 rounded-xl font-bold">
-
-Limpar
-
-</button>
-
-</div>
-
-</div>
-
-<!-- IMPORTAR -->
-
-<div class="card p-4 mb-5">
-
-<h3 class="font-bold mb-3">
-Importar CSV
-</h3>
-
-<input
-type="file"
-id="csvFile"
-accept=".csv"
-class="w-full">
-
-<button
-onclick="importCSV()"
-class="bg-emerald-600 w-full p-3 rounded-xl mt-3 font-bold">
-
-Importar Lista
-
-</button>
-
-</div>
-
-<!-- GPS -->
-
-<div class="card p-4 mb-5">
-
-<div class="flex justify-between">
-
-<div>
-
-<h3 class="font-bold">
-GPS
-</h3>
-
-<p
-id="gpsStatus"
-class="text-xs text-slate-400">
-
-Aguardando...
-
-</p>
-
-</div>
-
-<button
-onclick="startGPS()"
-class="bg-indigo-600 px-3 rounded-xl">
-
-Atualizar
-
-</button>
-
-</div>
-
-</div>
-
-<!-- DASHBOARD -->
-
-<div class="card p-4 mb-5">
-
-<h3 class="font-bold mb-4">
-Dashboard
-</h3>
-
-<div class="grid grid-cols-3 gap-2">
-
-<div class="bg-slate-900 rounded-xl p-3 text-center">
-
-<div
-id="pendingCount"
-class="font-black text-yellow-400 text-2xl">
-
-0
-
-</div>
-
-<div class="text-xs">
-Pendentes
-</div>
-
-</div>
-
-<div class="bg-slate-900 rounded-xl p-3 text-center">
-
-<div
-id="doneCount"
-class="font-black text-emerald-400 text-2xl">
-
-0
-
-</div>
-
-<div class="text-xs">
-Entregues
-</div>
-
-</div>
-
-<div class="bg-slate-900 rounded-xl p-3 text-center">
-
-<div
-id="totalCount"
-class="font-black text-indigo-400 text-2xl">
-
-0
-
-</div>
-
-<div class="text-xs">
-Total
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- LISTA PENDENTE -->
-
-<div class="card p-4 mb-5">
-
-<div class="flex justify-between items-center mb-3">
-
-<h3 class="font-bold">
-Entregas Pendentes
-</h3>
-
-<button
-onclick="clearAllDeliveries()"
-class="bg-red-600 px-3 py-2 rounded-lg text-sm">
-
-Excluir Tudo
-
-</button>
-
-</div>
-
-<div
-id="pendingList"
-class="space-y-2 max-h-72 overflow-y-auto">
-
-<div class="text-slate-500 text-center">
-Nenhuma entrega
-</div>
-
-</div>
-
-</div>
-
-<!-- BOTÃO PRINCIPAL -->
-
-<button
-onclick="optimizeRoute()"
-class="bg-emerald-600 w-full p-4 rounded-2xl font-black text-lg">
-
-🚀 CALCULAR MENOR ROTA
-
-</button>
-
-</aside>
-
-<!-- CONTEÚDO -->
-
-<main class="flex-1 p-5 overflow-y-auto">
-
-<!-- ENTREGA ATUAL -->
-
-<div
-id="currentDeliveryCard"
-class="card entrega-atual p-5 mb-5 hidden">
-
-<p class="text-xs uppercase text-indigo-400">
-Próxima Entrega
-</p>
-
-<h2
-id="currentPackage"
-class="text-3xl font-black mt-2">
-
--
-
-</h2>
-
-<p
-id="currentAddress"
-class="text-slate-300 mt-1">
-
--
-
-</p>
-
-<div class="grid md:grid-cols-3 gap-3 mt-5">
-
-<button
-onclick="openGoogleMaps()"
-class="bg-indigo-600 p-3 rounded-xl font-bold">
-
-🗺️ Navegar
-
-</button>
-
-<button
-onclick="completeDelivery()"
-class="bg-emerald-600 p-3 rounded-xl font-bold">
-
-✅ Entregue
-
-</button>
-
-<button
-onclick="skipDelivery()"
-class="bg-red-600 p-3 rounded-xl font-bold">
-
-⏭ Ignorar
-
-</button>
-
-</div>
-
-</div>
-
-<!-- MAPA -->
-
-<div class="card p-4 mb-5">
-
-<div class="flex justify-between items-center mb-3">
-
-<h3 class="font-bold">
-Mapa Inteligente
-</h3>
-
-<div
-id="routeDistance"
-class="text-emerald-400 font-bold">
-
-0 km
-
-</div>
-
-</div>
-
-<div
-id="map"
-class="rounded-xl">
-
-</div>
-
-</div>
-
-<!-- ORDEM DA ROTA -->
-
-<div class="card p-4 mb-5">
-
-<h3 class="font-bold mb-3">
-Ordem Otimizada
-</h3>
-
-<div
-id="routeList"
-class="space-y-2">
-
-<div class="text-slate-500 text-center">
-Aguardando cálculo...
-</div>
-
-</div>
-
-</div>
-
-<!-- ENTREGUES -->
-
-<div class="card p-4">
-
-<h3 class="font-bold text-emerald-400 mb-3">
-Entregues
-</h3>
-
-<div
-id="completedList"
-class="space-y-2">
-
-<div class="text-slate-500 text-center">
-Nenhuma entrega concluída
-</div>
-
-</div>
-
-</div>
-
-</main>
-
-</div>
-
-<script>
-
-/* ==========================
-   VARIÁVEIS GLOBAIS
-========================== */
-
-let map;
-let routeLine;
-
-let myMarker;
-
-let watchId;
-
-let myLat = null;
-let myLng = null;
-
-let deliveries = [];
-
-let optimizedRoute = [];
-
-let completedDeliveries = [];
-
-let markers = [];
-
-/* ==========================
-   INICIALIZA MAPA
-========================== */
-
-function initMap(){
-
-    map = L.map('map').setView(
-        [-21.7595,-43.3424],
-        13
-    );
-
-    L.tileLayer(
-      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      {
-         attribution:'© OpenStreetMap'
-      }
-    ).addTo(map);
-
-}
-
-window.onload = () => {
-
-    initMap();
-
-    loadData();
-
-};
-
-    /* ==========================
-   LOCAL STORAGE
-========================== */
-
-function saveData(){
-
-    localStorage.setItem(
-        "cp_deliveries",
-        JSON.stringify(deliveries)
-    );
-
-    localStorage.setItem(
-        "cp_route",
-        JSON.stringify(optimizedRoute)
-    );
-
-    localStorage.setItem(
-        "cp_completed",
-        JSON.stringify(completedDeliveries)
-    );
-
-}
-
-function loadData(){
-
-    const d =
-    localStorage.getItem("cp_deliveries");
-
-    const r =
-    localStorage.getItem("cp_route");
-
-    const c =
-    localStorage.getItem("cp_completed");
-
-    if(d) deliveries = JSON.parse(d);
-
-    if(r) optimizedRoute = JSON.parse(r);
-
-    if(c) completedDeliveries = JSON.parse(c);
-
-    updateDashboard();
-    renderPendingList();
-    renderCompletedList();
-    updateCurrentDelivery();
-
-}
-
-/* ==========================
-   DASHBOARD
-========================== */
-
-function updateDashboard(){
-
-    document.getElementById(
-        "pendingCount"
-    ).innerText = deliveries.length;
-
-    document.getElementById(
-        "doneCount"
-    ).innerText = completedDeliveries.length;
-
-    document.getElementById(
-        "totalCount"
-    ).innerText =
-        deliveries.length +
-        completedDeliveries.length;
-
-}
-
-/* ==========================
-   LIMPAR CAMPOS
-========================== */
-
-function clearFields(){
-
-    document.getElementById(
-        "packageId"
-    ).value = "";
-
-    document.getElementById(
-        "address"
-    ).value = "";
-
-}
-
-/* ==========================
-   ADICIONAR ENTREGA
-========================== */
-
-function addDelivery(){
-
-    const packageId =
-    document.getElementById(
-        "packageId"
-    ).value.trim();
-
-    const address =
-    document.getElementById(
-        "address"
-    ).value.trim();
-
-    if(!address){
-
-        alert(
-          "Digite o endereço."
-        );
-
-        return;
-    }
-
-    deliveries.push({
-
-        uid:
-        Date.now() +
-        "_" +
-        Math.random(),
-
-        packageId:
-        packageId ||
-        "#PK-" +
-        Math.floor(
-            Math.random() * 999999
-        ),
-
-        address,
-
-        lat:null,
-        lng:null
-
-    });
-
-    clearFields();
-
-    renderPendingList();
-    updateDashboard();
-    saveData();
-
-}
-
-/* ==========================
-   REMOVER ENTREGA
-========================== */
-
-function removeDelivery(uid){
-
-    deliveries =
-    deliveries.filter(
-      d => d.uid !== uid
-    );
-
-    renderPendingList();
-    updateDashboard();
-    saveData();
-
-}
-
-/* ==========================
-   EXCLUIR TODAS
-========================== */
-
-function clearAllDeliveries(){
-
-    if(
-      !confirm(
-      "Excluir todas as entregas?"
-      )
-    ) return;
-
-    deliveries = [];
-
-    renderPendingList();
-    updateDashboard();
-
-    saveData();
-
-}
-
-/* ==========================
-   LISTA PENDENTE
-========================== */
-
-function renderPendingList(){
-
-    const div =
-    document.getElementById(
-      "pendingList"
-    );
-
-    if(deliveries.length === 0){
-
-        div.innerHTML = `
-        <div class="text-center text-slate-500">
-        Nenhuma entrega
-        </div>
-        `;
-
-        return;
-    }
-
-    div.innerHTML = "";
-
-    deliveries.forEach(item => {
-
-        const el =
-        document.createElement("div");
-
-        el.className =
-        "bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center";
-
-        el.innerHTML = `
-
-        <div>
-
-            <div class="font-bold text-indigo-400">
-            ${item.packageId}
+    <div class="h-screen flex flex-col lg:flex-row">
+        <aside class="w-full lg:w-96 bg-slate-950 border-r border-slate-800 p-5 overflow-y-auto">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-indigo-600 p-3 rounded-xl">🚚</div>
+                <div>
+                    <h1 class="font-black text-2xl">CircuitPro Enterprise</h1>
+                    <p class="text-xs text-indigo-400">Menor Quilometragem Inteligente</p>
+                </div>
             </div>
 
-            <div class="text-xs text-slate-300">
-            ${item.address}
+            <div class="card p-4 mb-5">
+                <h3 class="font-bold mb-3">Nova Entrega</h3>
+                <input id="packageId" type="text" placeholder="ID do pacote" class="w-full p-3 mb-3 rounded-xl bg-slate-900 border border-slate-700">
+                <input id="address" type="text" placeholder="Endereço completo" class="w-full p-3 mb-3 rounded-xl bg-slate-900 border border-slate-700">
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="addDelivery()" class="bg-indigo-600 p-3 rounded-xl font-bold">Adicionar</button>
+                    <button onclick="clearFields()" class="bg-amber-600 p-3 rounded-xl font-bold">Limpar</button>
+                </div>
             </div>
 
-        </div>
-
-        <button
-        onclick="removeDelivery('${item.uid}')"
-        class="bg-red-600 w-8 h-8 rounded-lg">
-
-        ✕
-
-        </button>
-
-        `;
-
-        div.appendChild(el);
-
-    });
-
-}
-
-/* ==========================
-   LISTA ENTREGUES
-========================== */
-
-function renderCompletedList(){
-
-    const div =
-    document.getElementById(
-        "completedList"
-    );
-
-    if(
-      completedDeliveries.length === 0
-    ){
-
-        div.innerHTML = `
-        <div class="text-center text-slate-500">
-        Nenhuma entrega concluída
-        </div>
-        `;
-
-        return;
-    }
-
-    div.innerHTML = "";
-
-    completedDeliveries.forEach(item => {
-
-        const el =
-        document.createElement("div");
-
-        el.className =
-        "bg-emerald-900/30 border border-emerald-700 rounded-xl p-3";
-
-        el.innerHTML = `
-
-        <div class="font-bold text-emerald-400">
-        ${item.packageId}
-        </div>
-
-        <div class="text-sm">
-        ${item.address}
-        </div>
-
-        `;
-
-        div.appendChild(el);
-
-    });
-
-}
-
-/* ==========================
-   GPS TEMPO REAL
-========================== */
-
-function startGPS(){
-
-    const gpsStatus =
-    document.getElementById(
-      "gpsStatus"
-    );
-
-    if(
-      !navigator.geolocation
-    ){
-
-        gpsStatus.innerText =
-        "GPS não suportado";
-
-        return;
-    }
-
-    gpsStatus.innerText =
-    "Conectando GPS...";
-
-    if(watchId){
-
-        navigator.geolocation.clearWatch(
-            watchId
-        );
-
-    }
-
-    watchId =
-    navigator.geolocation.watchPosition(
-
-    (position)=>{
-
-        myLat =
-        position.coords.latitude;
-
-        myLng =
-        position.coords.longitude;
-
-        gpsStatus.innerHTML = `
-        Lat:
-        ${myLat.toFixed(5)}
-        <br>
-        Lng:
-        ${myLng.toFixed(5)}
-        `;
-
-        updateMyMarker();
-
-    },
-
-    ()=>{
-
-        gpsStatus.innerText =
-        "Erro GPS";
-
-    },
-
-    {
-        enableHighAccuracy:true,
-        maximumAge:0,
-        timeout:15000
-    });
-
-}
-
-/* ==========================
-   MARCADOR MOTORISTA
-========================== */
-
-function updateMyMarker(){
-
-    if(
-      myLat === null ||
-      myLng === null
-    ) return;
-
-    if(myMarker){
-
-        myMarker.setLatLng(
-            [myLat,myLng]
-        );
-
-    }
-    else{
-
-        myMarker =
-        L.marker(
-            [myLat,myLng]
-        ).addTo(map);
-
-    }
-
-}
-
-/* ==========================
-   IMPORTAÇÃO CSV
-========================== */
-
-function importCSV(){
-
-    const file =
-    document.getElementById(
-      "csvFile"
-    ).files[0];
-
-    if(!file){
-
-        alert(
-        "Selecione um CSV."
-        );
-
-        return;
-    }
-
-    const reader =
-    new FileReader();
-
-    reader.onload = (e)=>{
-
-        const lines =
-        e.target.result
-        .split("\n");
-
-        lines.forEach(line=>{
-
-            const cols =
-            line.split(",");
-
-            if(
-                cols.length >= 2
-            ){
-
-                deliveries.push({
-
-                    uid:
-                    Date.now()+
-                    Math.random(),
-
-                    packageId:
-                    cols[0].trim(),
-
-                    address:
-                    cols[1].trim(),
-
-                    lat:null,
-                    lng:null
-
-                });
-
-            }
-
-        });
-
-        renderPendingList();
-        updateDashboard();
-        saveData();
-
-        alert(
-        "Importação concluída."
-        );
-
-    };
-
-    reader.readAsText(
-        file,
-        "UTF-8"
-    );
-
-}
-
-/* ==========================
-   GEOCODIFICAÇÃO
-========================== */
-
-async function geocodeAddress(
-    address
-){
-
-    try{
-
-        const response =
-        await fetch(
-
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=BR&q=${encodeURIComponent(address)}`
-
-        );
-
-        const data =
-        await response.json();
-
-        if(
-          data.length > 0
-        ){
-
-            return {
-
-                lat:
-                parseFloat(
-                data[0].lat
-                ),
-
-                lng:
-                parseFloat(
-                data[0].lon
-                )
-
-            };
-
+            <div class="card p-4 mb-5">
+                <h3 class="font-bold mb-3">Importar CSV</h3>
+                <input type="file" id="csvFile" accept=".csv" class="w-full">
+                <button onclick="importCSV()" class="bg-emerald-600 w-full p-3 rounded-xl mt-3 font-bold">Importar Lista</button>
+            </div>
+
+            <div class="card p-4 mb-5">
+                <div class="flex justify-between">
+                    <div>
+                        <h3 class="font-bold">GPS</h3>
+                        <p id="gpsStatus" class="text-xs text-slate-400">Aguardando...</p>
+                    </div>
+                    <button onclick="startGPS()" class="bg-indigo-600 px-3 rounded-xl">Atualizar</button>
+                </div>
+            </div>
+
+            <div class="card p-4 mb-5">
+                <h3 class="font-bold mb-4">Dashboard</h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="bg-slate-900 rounded-xl p-3 text-center">
+                        <div id="pendingCount" class="font-black text-yellow-400 text-2xl">0</div>
+                        <div class="text-xs">Pendentes</div>
+                    </div>
+                    <div class="bg-slate-900 rounded-xl p-3 text-center">
+                        <div id="doneCount" class="font-black text-emerald-400 text-2xl">0</div>
+                        <div class="text-xs">Entregues</div>
+                    </div>
+                    <div class="bg-slate-900 rounded-xl p-3 text-center">
+                        <div id="totalCount" class="font-black text-indigo-400 text-2xl">0</div>
+                        <div class="text-xs">Total</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-4 mb-5">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold">Entregas Pendentes</h3>
+                    <button onclick="clearAllDeliveries()" class="bg-red-600 px-3 py-2 rounded-lg text-sm">Excluir Tudo</button>
+                </div>
+                <div id="pendingList" class="space-y-2 max-h-72 overflow-y-auto">
+                    <div class="text-slate-500 text-center">Nenhuma entrega</div>
+                </div>
+            </div>
+
+            <button onclick="optimizeRoute()" class="bg-emerald-600 w-full p-4 rounded-2xl font-black text-lg">🚀 CALCULAR MENOR ROTA</button>
+        </aside>
+
+        <main class="flex-1 p-5 overflow-y-auto">
+            <div id="currentDeliveryCard" class="card entrega-atual p-5 mb-5 hidden">
+                <p class="text-xs uppercase text-indigo-400">Próxima Entrega</p>
+                <h2 id="currentPackage" class="text-3xl font-black mt-2">-</h2>
+                <p id="currentAddress" class="text-slate-300 mt-1">-</p>
+                <div class="grid md:grid-cols-3 gap-3 mt-5">
+                    <button onclick="openGoogleMaps()" class="bg-indigo-600 p-3 rounded-xl font-bold">🗺️ Navegar</button>
+                    <button onclick="completeDelivery()" class="bg-emerald-600 p-3 rounded-xl font-bold">✅ Entregue</button>
+                    <button onclick="skipDelivery()" class="bg-red-600 p-3 rounded-xl font-bold">⏭ Ignorar</button>
+                </div>
+            </div>
+
+            <div class="card p-4 mb-5">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold">Mapa Inteligente</h3>
+                    <div id="routeDistance" class="text-emerald-400 font-bold">0 km</div>
+                </div>
+                <div id="map" class="rounded-xl"></div>
+            </div>
+
+            <div class="card p-4 mb-5">
+                <h3 class="font-bold mb-3">Ordem Otimizada</h3>
+                <div id="routeList" class="space-y-2">
+                    <div class="text-slate-500 text-center">Aguardando cálculo...</div>
+                </div>
+            </div>
+
+            <div class="card p-4">
+                <h3 class="font-bold text-emerald-400 mb-3">Entregues</h3>
+                <div id="completedList" class="space-y-2">
+                    <div class="text-slate-500 text-center">Nenhuma entrega concluída</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let map;
+        let routeLine;
+        let myMarker;
+        let watchId;
+        let myLat = null;
+        let myLng = null;
+        let deliveries = [];
+        let optimizedRoute = [];
+        let completedDeliveries = [];
+        let markers = [];
+
+        function initMap(){
+            map = L.map('map').setView([-21.7595,-43.3424], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution:'© OpenStreetMap'
+            }).addTo(map);
         }
 
-    }
-    catch(err){
+        window.onload = () => {
+            initMap();
+            loadData();
+        };
 
-        console.error(err);
+        function saveData(){
+            localStorage.setItem("cp_deliveries", JSON.stringify(deliveries));
+            localStorage.setItem("cp_route", JSON.stringify(optimizedRoute));
+            localStorage.setItem("cp_completed", JSON.stringify(completedDeliveries));
+        }
 
-    }
+        function loadData(){
+            const d = localStorage.getItem("cp_deliveries");
+            const r = localStorage.getItem("cp_route");
+            const c = localStorage.getItem("cp_completed");
+            if(d) deliveries = JSON.parse(d);
+            if(r) optimizedRoute = JSON.parse(r);
+            if(c) completedDeliveries = JSON.parse(c);
+            updateDashboard();
+            renderPendingList();
+            renderCompletedList();
+            updateCurrentDelivery();
+        }
 
-    return null;
+        function updateDashboard(){
+            document.getElementById("pendingCount").innerText = deliveries.length;
+            document.getElementById("doneCount").innerText = completedDeliveries.length;
+            document.getElementById("totalCount").innerText = deliveries.length + completedDeliveries.length;
+        }
 
-    }
-/* ==========================
-   MARCADORES E ROTA
-========================== */
+        function clearFields(){
+            document.getElementById("packageId").value = "";
+            document.getElementById("address").value = "";
+        }
 
-function clearMapRoute(){
+        function addDelivery(){
+            const packageId = document.getElementById("packageId").value.trim();
+            const address = document.getElementById("address").value.trim();
+            if(!address){
+                alert("Digite o endereço.");
+                return;
+            }
+            deliveries.push({
+                uid: Date.now() + "_" + Math.random(),
+                packageId: packageId || "#PK-" + Math.floor(Math.random() * 999999),
+                address,
+                lat:null,
+                lng:null
+            });
+            clearFields();
+            renderPendingList();
+            updateDashboard();
+            saveData();
+        }
 
-    markers.forEach(m => {
-        map.removeLayer(m);
-    });
+        function removeDelivery(uid){
+            deliveries = deliveries.filter(d => d.uid !== uid);
+            renderPendingList();
+            updateDashboard();
+            saveData();
+        }
 
-    markers = [];
+        function clearAllDeliveries(){
+            if(!confirm("Excluir todas as entregas?")) return;
+            deliveries = [];
+            renderPendingList();
+            updateDashboard();
+            saveData();
+        }
 
-    if(routeLine){
-        map.removeLayer(routeLine);
-    }
+        function renderPendingList(){
+            const div = document.getElementById("pendingList");
+            if(deliveries.length === 0){
+                div.innerHTML = `<div class="text-center text-slate-500">Nenhuma entrega</div>`;
+                return;
+            }
+            div.innerHTML = "";
+            deliveries.forEach(item => {
+                const el = document.createElement("div");
+                el.className = "bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center";
+                el.innerHTML = `
+                    <div>
+                        <div class="font-bold text-indigo-400">${item.packageId}</div>
+                        <div class="text-xs text-slate-300">${item.address}</div>
+                    </div>
+                    <button onclick="removeDelivery('${item.uid}')" class="bg-red-600 w-8 h-8 rounded-lg">✕</button>
+                `;
+                div.appendChild(el);
+            });
+        }
 
-}
+        function renderCompletedList(){
+            const div = document.getElementById("completedList");
+            if(completedDeliveries.length === 0){
+                div.innerHTML = `<div class="text-center text-slate-500">Nenhuma entrega concluída</div>`;
+                return;
+            }
+            div.innerHTML = "";
+            completedDeliveries.forEach(item => {
+                const el = document.createElement("div");
+                el.className = "bg-emerald-900/30 border border-emerald-700 rounded-xl p-3";
+                el.innerHTML = `
+                    <div class="font-bold text-emerald-400">${item.packageId}</div>
+                    <div class="text-sm">${item.address}</div>
+                `;
+                div.appendChild(el);
+            });
+        }
 
-/* ==========================
-   MARCADOR NUMERADO
-========================== */
+        function startGPS(){
+            const gpsStatus = document.getElementById("gpsStatus");
+            if(!navigator.geolocation){
+                gpsStatus.innerText = "GPS não suportado";
+                return;
+            }
+            gpsStatus.innerText = "Conectando GPS...";
+            if(watchId){
+                navigator.geolocation.clearWatch(watchId);
+            }
+            watchId = navigator.geolocation.watchPosition(
+                position => {
+                    myLat = position.coords.latitude;
+                    myLng = position.coords.longitude;
+                    gpsStatus.innerHTML = `Lat: ${myLat.toFixed(5)}<br>Lng: ${myLng.toFixed(5)}`;
+                    updateMyMarker();
+                },
+                () => {
+                    gpsStatus.innerText = "Erro GPS";
+                },
+                {
+                    enableHighAccuracy:true,
+                    maximumAge:0,
+                    timeout:15000
+                }
+            );
+        }
 
-function createNumberMarker(number){
+        function updateMyMarker(){
+            if(myLat === null || myLng === null) return;
+            if(myMarker){
+                myMarker.setLatLng([myLat,myLng]);
+            } else {
+                myMarker = L.marker([myLat,myLng]).addTo(map);
+            }
+        }
 
-    return L.divIcon({
+        function importCSV(){
+            const file = document.getElementById("csvFile").files[0];
+            if(!file){
+                alert("Selecione um CSV.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const lines = e.target.result.split("\n");
+                lines.forEach(line => {
+                    const cols = line.split(",");
+                    if(cols.length >= 2){
+                        deliveries.push({
+                            uid: Date.now() + Math.random(),
+                            packageId: cols[0].trim(),
+                            address: cols[1].trim(),
+                            lat:null,
+                            lng:null
+                        });
+                    }
+                });
+                renderPendingList();
+                updateDashboard();
+                saveData();
+                alert("Importação concluída.");
+            };
+            reader.readAsText(file, "UTF-8");
+        }
 
-        className:"",
-
-        html:`
-        <div class="marker-number">
-            ${number}
-        </div>
-        `,
-
-        iconSize:[36,36],
-        iconAnchor:[18,18]
-
-    });
-
-}
-
-/* ==========================
-   CALCULAR MENOR ROTA
-========================== */
-
-async function optimizeRoute(){
-
-    if(deliveries.length === 0){
-
-        alert("Adicione entregas.");
-
-        return;
-    }
-
-    if(myLat === null){
-
-        alert("Atualize o GPS primeiro.");
-
-        return;
-    }
-
-    try{
-
-        alert(
-          "Calculando rota otimizada..."
-        );
-
-        /* Geocodifica todos */
-
-        for(const item of deliveries){
-
-            if(
-                item.lat === null ||
-                item.lng === null
-            ){
-
-                const geo =
-                await geocodeAddress(
-                    item.address
+        async function geocodeAddress(address){
+            try{
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=BR&q=${encodeURIComponent(address)}`,
+                    {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }
                 );
+                if(!response.ok) throw new Error("Erro na geocodificação");
+                const data = await response.json();
+                if(data.length > 0){
+                    return {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                }
+            } catch(err){
+                console.error(err);
+            }
+            return null;
+        }
 
-                if(geo){
+        function clearMapRoute(){
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            if(routeLine){
+                map.removeLayer(routeLine);
+            }
+        }
 
-                    item.lat = geo.lat;
-                    item.lng = geo.lng;
+        function createNumberMarker(number){
+            return L.divIcon({
+                className:"",
+                html:`<div class="marker-number">${number}</div>`,
+                iconSize:[36,36],
+                iconAnchor:[18,18]
+            });
+        }
 
+        async function optimizeRoute(){
+            if(deliveries.length === 0){
+                alert("Adicione entregas.");
+                return;
+            }
+            if(myLat === null || myLng === null){
+                alert("Atualize o GPS primeiro.");
+                return;
+            }
+            try{
+                alert("Calculando rota otimizada...");
+
+                for(const item of deliveries){
+                    if(item.lat === null || item.lng === null){
+                        const geo = await geocodeAddress(item.address);
+                        if(geo){
+                            item.lat = geo.lat;
+                            item.lng = geo.lng;
+                        } else {
+                            console.warn("Não foi possível geocodificar:", item.address);
+                        }
+                    }
                 }
 
-            }
+                const valid = deliveries.filter(d => d.lat && d.lng);
+                if(valid.length === 0){
+                    alert("Nenhum endereço foi localizado com sucesso.");
+                    return;
+                }
 
+                console.log("Entregas válidas:", valid.length);
+
+                const coords = [
+                    `${myLng},${myLat}`,
+                    ...valid.map(d => `${d.lng},${d.lat}`)
+                ].join(";");
+
+                console.log("Coordenadas:", coords);
+
+                const url = `https://router.project-osrm.org/trip/v1/driving/${coords}?source=first&roundtrip=false&overview=full&geometries=geojson`;
+
+                console.log("URL:", url);
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if(!response.ok) throw new Error(`Erro na API: ${response.status}`);
+
+                const data = await response.json();
+
+                console.log("Resposta:", data);
+
+                if(data.code !== "Ok"){
+                    alert(`Erro: ${data.code}\n${data.message || "Verifique os endereços."}`);
+                    return;
+                }
+
+                optimizedRoute = [];
+
+                const ordered = data.waypoints
+                    .filter(w => w.waypoint_index > 0)
+                    .sort((a,b) => a.waypoint_index - b.waypoint_index);
+
+                ordered.forEach(w => {
+                    const lat = w.location[1];
+                    const lng = w.location[0];
+                    const delivery = valid.find(d =>
+                        Math.abs(d.lat - lat) < 0.0005 &&
+                        Math.abs(d.lng - lng) < 0.0005
+                    );
+                    if(delivery){
+                        optimizedRoute.push(delivery);
+                    }
+                });
+
+                if(optimizedRoute.length === 0){
+                    alert("Não foi possível mapear a rota.");
+                    return;
+                }
+
+                drawRoute(data.routes[0]);
+                renderRouteList();
+                updateCurrentDelivery();
+                saveData();
+
+                alert("Rota calculada com sucesso!");
+
+            } catch(err){
+                console.error("ERRO:", err);
+                alert(`Falha ao calcular rota:\n${err.message}`);
+            }
         }
 
-        const valid =
-        deliveries.filter(
-            d => d.lat && d.lng
-        );
+        function drawRoute(route){
+            clearMapRoute();
+            routeLine = L.geoJSON(route.geometry, {
+                style:{
+                    color:"#4f46e5",
+                    weight:6,
+                    opacity:0.9
+                }
+            }).addTo(map);
 
-        if(valid.length === 0){
+            optimizedRoute.forEach((item,index) => {
+                const marker = L.marker(
+                    [item.lat,item.lng],
+                    { icon: createNumberMarker(index + 1) }
+                ).addTo(map).bindPopup(`
+                    <b>${index+1}</b><br>
+                    ${item.packageId}<br>
+                    ${item.address}
+                `);
+                markers.push(marker);
+            });
 
-            alert(
-            "Nenhum endereço localizado."
+            map.fitBounds(routeLine.getBounds());
+
+            document.getElementById("routeDistance").innerText =
+                (route.distance / 1000).toFixed(1) + " km";
+        }
+
+        function renderRouteList(){
+            const div = document.getElementById("routeList");
+            if(optimizedRoute.length === 0){
+                div.innerHTML = "Aguardando cálculo...";
+                return;
+            }
+            div.innerHTML = "";
+            optimizedRoute.forEach((item,index) => {
+                const el = document.createElement("div");
+                el.className = "bg-slate-900 border border-slate-700 rounded-xl p-3 flex gap-3";
+                el.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold">${index+1}</div>
+                    <div>
+                        <div class="font-bold text-indigo-400">${item.packageId}</div>
+                        <div class="text-sm text-slate-300">${item.address}</div>
+                    </div>
+                `;
+                div.appendChild(el);
+            });
+        }
+
+        function updateCurrentDelivery(){
+            const card = document.getElementById("currentDeliveryCard");
+            if(optimizedRoute.length === 0){
+                card.classList.add("hidden");
+                return;
+            }
+            card.classList.remove("hidden");
+            const current = optimizedRoute[0];
+            document.getElementById("currentPackage").innerText = current.packageId;
+            document.getElementById("currentAddress").innerText = current.address;
+        }
+
+        function openGoogleMaps(){
+            if(optimizedRoute.length === 0) return;
+            const current = optimizedRoute[0];
+            window.open(
+                `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current.address)}&travelmode=driving`,
+                "_blank"
             );
-
-            return;
         }
 
-        const coords = [
-
-            `${myLng},${myLat}`,
-
-            ...valid.map(
-            d =>
-            `${d.lng},${d.lat}`
-            )
-
-        ].join(";");
-
-        const url =
-        `https://router.project-osrm.org/trip/v1/driving/${coords}?source=first&roundtrip=false&overview=full&geometries=geojson`;
-
-        const response =
-        await fetch(url);
-
-        const data =
-        await response.json();
-
-        if(
-          data.code !== "Ok"
-        ){
-
-            alert(
-            "Erro ao otimizar rota."
-            );
-
-            return;
-        }
-
-        optimizedRoute = [];
-
-        const ordered =
-        data.waypoints
-        .filter(
-          w => w.waypoint_index > 0
-        )
-        .sort(
-          (a,b)=>
-          a.waypoint_index -
-          b.waypoint_index
-        );
-
-        ordered.forEach(w=>{
-
-            const lat =
-            w.location[1];
-
-            const lng =
-            w.location[0];
-
-            const delivery =
-            valid.find(
-
-            d=>
-
-            Math.abs(
-                d.lat-lat
-            ) < 0.0005 &&
-
-            Math.abs(
-                d.lng-lng
-            ) < 0.0005
-
-            );
-
-            if(delivery){
-
-                optimizedRoute.push(
-                    delivery
-                );
-
-            }
-
-        });
-
-        drawRoute(
-            data.routes[0]
-        );
-
-        renderRouteList();
-
-        updateCurrentDelivery();
-
-        saveData();
-
-        alert(
-        "Rota calculada com sucesso."
-        );
-
-    }
-    catch(err){
-
-        console.error(err);
-
-        alert(
-        "Falha ao calcular rota."
-        );
-
-    }
-
-}
-
-/* ==========================
-   DESENHAR ROTA
-========================== */
-
-function drawRoute(route){
-
-    clearMapRoute();
-
-    routeLine =
-    L.geoJSON(
-        route.geometry,
-        {
-            style:{
-                color:"#4f46e5",
-                weight:6,
-                opacity:0.9
+        function completeDelivery(){
+            if(optimizedRoute.length === 0) return;
+            const current = optimizedRoute.shift();
+            completedDeliveries.push(current);
+            deliveries = deliveries.filter(d => d.uid !== current.uid);
+            renderCompletedList();
+            renderPendingList();
+            renderRouteList();
+            updateCurrentDelivery();
+            updateDashboard();
+            saveData();
+            if(optimizedRoute.length === 0){
+                alert("Todas as entregas concluídas.");
+                clearMapRoute();
+                document.getElementById("routeDistance").innerText = "0 km";
             }
         }
-    ).addTo(map);
 
-    optimizedRoute.forEach(
-    (item,index)=>{
+        function skipDelivery(){
+            if(optimizedRoute.length === 0) return;
+            const skipped = optimizedRoute.shift();
+            optimizedRoute.push(skipped);
+            renderRouteList();
+            updateCurrentDelivery();
+            saveData();
+        }
 
-        const marker =
-        L.marker(
-
-            [item.lat,item.lng],
-
-            {
-                icon:
-                createNumberMarker(
-                    index + 1
-                )
+        setInterval(async () => {
+            if(optimizedRoute.length === 0) return;
+            if(myLat === null) return;
+            const next = optimizedRoute[0];
+            const distance = map.distance([myLat,myLng], [next.lat,next.lng]);
+            if(distance > 5000){
+                console.log("Recalculando rota...");
+                await optimizeRoute();
             }
-
-        )
-
-        .addTo(map)
-
-        .bindPopup(`
-
-        <b>
-        ${index+1}
-        </b>
-
-        <br>
-
-        ${item.packageId}
-
-        <br>
-
-        ${item.address}
-
-        `);
-
-        markers.push(marker);
-
-    });
-
-    map.fitBounds(
-        routeLine.getBounds()
-    );
-
-    document.getElementById(
-      "routeDistance"
-    ).innerText =
-
-    (
-      route.distance / 1000
-    ).toFixed(1)
-
-    + " km";
-
-}
-
-/* ==========================
-   LISTA OTIMIZADA
-========================== */
-
-function renderRouteList(){
-
-    const div =
-    document.getElementById(
-        "routeList"
-    );
-
-    if(
-      optimizedRoute.length === 0
-    ){
-
-        div.innerHTML =
-        "Aguardando cálculo...";
-
-        return;
-    }
-
-    div.innerHTML = "";
-
-    optimizedRoute.forEach(
-    (item,index)=>{
-
-        const el =
-        document.createElement(
-            "div"
-        );
-
-        el.className =
-        "bg-slate-900 border border-slate-700 rounded-xl p-3 flex gap-3";
-
-        el.innerHTML = `
-
-        <div
-        class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold">
-
-        ${index+1}
-
-        </div>
-
-        <div>
-
-            <div class="font-bold text-indigo-400">
-
-            ${item.packageId}
-
-            </div>
-
-            <div class="text-sm text-slate-300">
-
-            ${item.address}
-
-            </div>
-
-        </div>
-
-        `;
-
-        div.appendChild(el);
-
-    });
-
-}
-
-/* ==========================
-   ENTREGA ATUAL
-========================== */
-
-function updateCurrentDelivery(){
-
-    const card =
-    document.getElementById(
-        "currentDeliveryCard"
-    );
-
-    if(
-      optimizedRoute.length === 0
-    ){
-
-        card.classList.add(
-            "hidden"
-        );
-
-        return;
-    }
-
-    card.classList.remove(
-        "hidden"
-    );
-
-    const current =
-    optimizedRoute[0];
-
-    document.getElementById(
-        "currentPackage"
-    ).innerText =
-    current.packageId;
-
-    document.getElementById(
-        "currentAddress"
-    ).innerText =
-    current.address;
-
-}
-
-/* ==========================
-   GOOGLE MAPS
-========================== */
-
-function openGoogleMaps(){
-
-    if(
-      optimizedRoute.length === 0
-    ) return;
-
-    const current =
-    optimizedRoute[0];
-
-    window.open(
-
-    `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(current.address)}&travelmode=driving`
-
-    ,"_blank");
-
-}
-
-/* ==========================
-   CONCLUIR ENTREGA
-========================== */
-
-function completeDelivery(){
-
-    if(
-      optimizedRoute.length === 0
-    ) return;
-
-    const current =
-    optimizedRoute.shift();
-
-    completedDeliveries.push(
-        current
-    );
-
-    deliveries =
-    deliveries.filter(
-        d => d.uid !== current.uid
-    );
-
-    renderCompletedList();
-
-    renderPendingList();
-
-    renderRouteList();
-
-    updateCurrentDelivery();
-
-    updateDashboard();
-
-    saveData();
-
-    if(
-      optimizedRoute.length === 0
-    ){
-
-        alert(
-        "Todas as entregas concluídas."
-        );
-
-        clearMapRoute();
-
-        document.getElementById(
-        "routeDistance"
-        ).innerText = "0 km";
-
-    }
-
-}
-
-/* ==========================
-   IGNORAR ENTREGA
-========================== */
-
-function skipDelivery(){
-
-    if(
-      optimizedRoute.length === 0
-    ) return;
-
-    const skipped =
-    optimizedRoute.shift();
-
-    optimizedRoute.push(
-        skipped
-    );
-
-    renderRouteList();
-
-    updateCurrentDelivery();
-
-    saveData();
-
-}
-
-/* ==========================
-   RECALCULAR AUTOMÁTICO
-========================== */
-
-setInterval(async ()=>{
-
-    if(
-      optimizedRoute.length === 0
-    ) return;
-
-    if(
-      myLat === null
-    ) return;
-
-    const next =
-    optimizedRoute[0];
-
-    const distance =
-
-    map.distance(
-
-        [myLat,myLng],
-
-        [next.lat,next.lng]
-
-    );
-
-    if(
-      distance > 5000
-    ){
-
-        console.log(
-        "Recalculando rota..."
-        );
-
-        await optimizeRoute();
-
-    }
-
-},60000);
-
-/* ==========================
-   INICIAR GPS AUTOMÁTICO
-========================== */
-
-setTimeout(()=>{
-
-    startGPS();
-
-},1000);
-
-</script>
+        },60000);
+
+        setTimeout(() => {
+            startGPS();
+        },1000);
+    </script>
+</body>
+</html>
