@@ -8,6 +8,10 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
 
+<!-- Leaflet CSS para o Mapa -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
 <style>
 body{
     background:#0f172a;
@@ -25,6 +29,11 @@ body{
     background:#111827;
     border:1px solid #1f2937;
     border-radius:20px;
+}
+#mapa {
+    height: 400px;
+    width: 100%;
+    border-radius: 12px;
 }
 </style>
 </head>
@@ -115,6 +124,12 @@ body{
         </div>
     </div>
 
+    <!-- 🗺️ MAPA INTERATIVO -->
+    <div class="card p-4 mb-6">
+        <h3 class="font-bold mb-3">🗺️ Mapa das Entregas</h3>
+        <div id="mapa"></div>
+    </div>
+
     <!-- 🚚 ENTREGA ATUAL E AÇÕES -->
     <div id="painelEntregaAtual" class="card p-6 mb-6 hidden border-2 border-indigo-500/40">
         <div class="mb-4">
@@ -128,20 +143,6 @@ body{
             <button onclick="marcarComoEntregueEIrProximo()" class="bg-emerald-600 p-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">✅ Entregue → Próxima</button>
             <button onclick="ignorarEntrega()" class="bg-red-600 p-4 rounded-xl font-bold text-lg">Ignorar</button>
         </div>
-    </div>
-
-    <!-- 📸 STREET VIEW -->
-    <div id="painelStreetView" class="card p-4 mb-6 hidden">
-        <h3 class="font-bold mb-3 flex items-center gap-2">📸 Vista da Rua (Street View)</h3>
-        <iframe 
-            id="streetViewFrame"
-            width="100%" 
-            height="350" 
-            style="border:0; border-radius:12px;" 
-            allowfullscreen
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
     </div>
 
     <!-- 📋 ORDEM OTIMIZADA + DISTÂNCIA TOTAL -->
@@ -176,6 +177,97 @@ body{
 
 <script>
 lucide.createIcons();
+
+// 🗺️ INICIALIZAR MAPA
+let mapa;
+let marcadores = [];
+let rotaLinha;
+
+function inicializarMapa() {
+    mapa = L.map('mapa').setView([-15.7801, -47.9292], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(mapa);
+}
+
+function atualizarMapa() {
+    // Limpar marcadores antigos
+    marcadores.forEach(m => mapa.removeLayer(m));
+    marcadores = [];
+    if (rotaLinha) mapa.removeLayer(rotaLinha);
+
+    const pontos = [];
+
+    // Marcar posição atual
+    if (minhaLat && minhaLng) {
+        const marcadorEu = L.marker([minhaLat, minhaLng], {
+            icon: L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            })
+        }).addTo(mapa).bindPopup("📍 Você está aqui");
+        marcadores.push(marcadorEu);
+        pontos.push([minhaLat, minhaLng]);
+    }
+
+    // Marcar entregas na rota
+    rotaOtimizada.forEach((e, i) => {
+        if (e.lat && e.lng) {
+            const marcador = L.marker([e.lat, e.lng], {
+                icon: L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41]
+                })
+            }).addTo(mapa).bindPopup(`<b>${i+1}. ${e.idPacote}</b><br>${e.endereco}`);
+            marcadores.push(marcador);
+            pontos.push([e.lat, e.lng]);
+        }
+    });
+
+    // 🔄 NOVO: Desenhar rota REAL pelas ruas usando OSRM
+    if (pontos.length > 1) {
+        // Montar URL da API OSRM
+        const coords = pontos.map(p => p[1] + "," + p[0]).join(";");
+        const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+
+        fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (data.code === "Ok") {
+                // Pegar o caminho em formato GeoJSON
+                const rotaGeoJSON = data.routes[0].geometry;
+                rotaLinha = L.geoJSON(rotaGeoJSON, {
+                    style: {
+                        color: '#4f46e5',
+                        weight: 5,
+                        opacity: 0.8
+                    }
+                }).addTo(mapa);
+
+                // Ajustar zoom para ver toda a rota
+                mapa.fitBounds(rotaLinha.getBounds());
+
+                // Atualizar distância total real (em km)
+                const distanciaReal = (data.routes[0].distance / 1000).toFixed(1);
+                document.getElementById("distanciaTotal").innerText = `| Total: ${distanciaReal} km`;
+            } else {
+                // Se der erro, desenha em linha reta mesmo
+                rotaLinha = L.polyline(pontos, {color: '#4f46e5', weight: 4}).addTo(mapa);
+                mapa.fitBounds(rotaLinha.getBounds());
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            // Em caso de erro, desenha linha reta
+            rotaLinha = L.polyline(pontos, {color: '#4f46e5', weight: 4}).addTo(mapa);
+            mapa.fitBounds(rotaLinha.getBounds());
+        });
+    }
+}
 
 // 📦 VARIÁVEIS GLOBAIS
 let entregasAdicionadas = [];
@@ -304,6 +396,7 @@ function pegarMinhaLocalizacao(){
             minhaLat = pos.coords.latitude;
             minhaLng = pos.coords.longitude;
             status.innerHTML = `✅ Lat: ${minhaLat.toFixed(5)} <br> Lng: ${minhaLng.toFixed(5)}`;
+            if (mapa) mapa.setView([minhaLat, minhaLng], 15);
         },
         erro=>{
             status.innerText = "❌ Não foi possível obter localização";
@@ -327,7 +420,7 @@ async function pegarCoordenadas(endereco){
 }
 
 
-// 📏 DISTÂNCIA ENTRE DOIS PONTOS (KM)
+// 📏 DISTÂNCIA ENTRE DOIS PONTOS (KM) - linha reta
 function calcularDistanciaKM(lat1, lng1, lat2, lng2){
     const R = 6371;
     const dLat = (lat2 - lat1)*Math.PI/180;
@@ -347,7 +440,7 @@ function calcularDistanciaTotal(sequencia, pontoInicial){
     return total;
 }
 
-// 🔄 GERAR PERMUTAÇÕES (PARA TESTAR TODAS AS ORDENS)
+// 🔄 GERAR PERMUTAÇÕES
 function permutar(arr){
     if(arr.length===0) return [];
     if(arr.length===1) return [arr];
@@ -383,7 +476,7 @@ async function iniciarRoteirizacao(){
     const lista = [...entregasAdicionadas];
     const origem = {lat:minhaLat, lng:minhaLng};
 
-    // 2. Se até 8 pontos: testa TODAS as ordens (resultado EXATO)
+    // 2. Se até 8 pontos: testa TODAS as ordens
     if(lista.length <= 8){
         const todasOrdens = permutar(lista);
         let menorDist = Infinity;
@@ -397,16 +490,13 @@ async function iniciarRoteirizacao(){
             }
         }
         rotaOtimizada = melhorOrdem;
-        document.getElementById("distanciaTotal").innerText = `| Total: ${menorDist.toFixed(1)} km`;
     }
     else{
-        // 3. Mais de 8 pontos: usa método 2-Opt (melhora muito o vizinho próximo)
-        // Começa com vizinho próximo, depois otimiza trocando pares
+        // 3. Mais de 8 pontos: usa método 2-Opt
         let atual = origem;
         let naoVisitadas = [...lista];
         rotaOtimizada = [];
 
-        // Primeiro: vizinho próximo
         while(naoVisitadas.length>0){
             let proxIdx = 0;
             let menor = Infinity;
@@ -419,7 +509,6 @@ async function iniciarRoteirizacao(){
             atual = p;
         }
 
-        // Agora otimiza com 2-Opt
         let melhorou;
         do{
             melhorou = false;
@@ -434,7 +523,6 @@ async function iniciarRoteirizacao(){
                     ) + calcularDistanciaKM(rotaOtimizada[i], j===rotaOtimizada.length-1 ? rotaOtimizada[j] : rotaOtimizada[j+1]);
 
                     if(dDepois < dAntes){
-                        // Troca trecho
                         rotaOtimizada = [
                             ...rotaOtimizada.slice(0,i),
                             ...rotaOtimizada.slice(i,j+1).reverse(),
@@ -445,15 +533,13 @@ async function iniciarRoteirizacao(){
                 }
             }
         }while(melhorou);
-
-        const totalFinal = calcularDistanciaTotal(rotaOtimizada, origem);
-        document.getElementById("distanciaTotal").innerText = `| Total: ${totalFinal.toFixed(1)} km`;
     }
 
     entregasAdicionadas = [];
     atualizarTelaPendentes();
     atualizarListaRota();
     atualizarPainelEntrega();
+    atualizarMapa(); // <-- Agora desenha a rota REAL pelas ruas
     salvarTudo();
     alert("✅ Rota calculada com MENOR distância total!");
 }
@@ -485,25 +571,16 @@ function atualizarListaRota(){
 // 🚚 PAINEL ATUAL
 function atualizarPainelEntrega(){
     const painel = document.getElementById("painelEntregaAtual");
-    const painelStreet = document.getElementById("painelStreetView");
-    const frameStreet = document.getElementById("streetViewFrame");
 
     if(rotaOtimizada.length===0){
         painel.classList.add("hidden");
-        painelStreet.classList.add("hidden");
         return;
     }
     painel.classList.remove("hidden");
-    painelStreet.classList.remove("hidden");
 
     const atual = rotaOtimizada[0];
     document.getElementById("idPacoteAtual").innerText = atual.idPacote;
     document.getElementById("enderecoAtual").innerText = atual.endereco;
-
-    // Atualiza Street View com as coordenadas
-    if(atual.lat && atual.lng){
-        frameStreet.src = `https://www.google.com/maps/embed?pb=!1m0!2m1!1e1!3m2!1s${atual.lat}!2s${atual.lng}!4v1!4m0!5m1!1s${atual.lat},${atual.lng}`;
-    }
 
     atualizarListaRota();
 }
@@ -519,28 +596,28 @@ function marcarComoEntregueEIrProximo(){
     atualizarPainelEntrega();
     atualizarListaEntregues();
     atualizarEstatisticas();
+    atualizarMapa();
     salvarTudo();
 
-    // 🔁 SE AINDA TEM PROXIMA, ABRE O MAPA
     if(rotaOtimizada.length > 0){
         setTimeout(() => abrirNoGoogleMaps(), 400);
     } 
     else 
     {
-        // 🧹 LIMPAR TUDO MESMO - ZERA TUDO DO ZERO
         alert("🏁 TODAS AS ENTREGAS FINALIZADAS!\nO sistema será reiniciado para uma nova viagem.");
         
         entregasAdicionadas = [];
         rotaOtimizada = [];
         entregasConcluidas = [];
         
-        localStorage.clear(); // apaga tudo salvo
+        localStorage.clear();
         
         atualizarTelaPendentes();
         atualizarListaRota();
         atualizarListaEntregues();
         atualizarEstatisticas();
         atualizarPainelEntrega();
+        atualizarMapa();
     }
 }
 
@@ -556,6 +633,7 @@ function ignorarEntrega(){
     if(rotaOtimizada.length===0) return;
     rotaOtimizada.shift();
     atualizarPainelEntrega();
+    atualizarMapa();
     salvarTudo();
 }
 
@@ -634,6 +712,7 @@ async function capturarTexto(){
 
 
 window.onload = ()=>{
+    inicializarMapa();
     pegarMinhaLocalizacao();
     carregarDados();
 };
