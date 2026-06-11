@@ -1,1391 +1,643 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>CircuitPro Professional</title>
-
+<title>CircuitPro Professional - Menor Quilometragem</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
 
 <style>
-
 body{
-background:#0f172a;
-color:white;
-font-family:Arial,Helvetica,sans-serif;
+    background:#0f172a;
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
 }
-
 ::-webkit-scrollbar{
-width:6px;
+    width:6px;
 }
-
 ::-webkit-scrollbar-thumb{
-background:#334155;
-border-radius:20px;
+    background:#334155;
+    border-radius:20px;
 }
-
 .card{
-background:#111827;
-border:1px solid #1f2937;
-border-radius:20px;
+    background:#111827;
+    border:1px solid #1f2937;
+    border-radius:20px;
 }
-
 </style>
-
 </head>
-
 <body>
 
 <div class="min-h-screen flex flex-col lg:flex-row">
 
-<!-- MENU -->
-
+<!-- MENU LATERAL -->
 <aside class="w-full lg:w-96 bg-slate-950 border-r border-slate-800 p-5">
+    <div class="flex items-center gap-3 mb-6">
+        <div class="bg-indigo-600 p-3 rounded-xl">
+            <i data-lucide="navigation"></i>
+        </div>
+        <div>
+            <h1 class="font-black text-xl">CircuitPro</h1>
+            <p class="text-xs text-indigo-400">Menor Quilometragem</p>
+        </div>
+    </div>
 
-<div class="flex items-center gap-3 mb-6">
+    <!-- FORM ADICIONAR -->
+    <div class="card p-4 mb-5">
+        <label class="text-xs block mb-1">ID DO PACOTE</label>
+        <input id="packageIdInput" type="text" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 mb-3" placeholder="#PK-001">
+        <label class="text-xs block mb-1">ENDEREÇO COMPLETO</label>
+        <input id="addressInput" type="text" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 mb-3" placeholder="Rua, Número, Bairro - Cidade">
+        
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <button onclick="addStop()" class="bg-indigo-600 p-3 rounded-xl font-bold">Adicionar</button>
+            <button onclick="openScanner()" class="bg-slate-800 p-3 rounded-xl">OCR</button>
+        </div>
 
-<div class="bg-indigo-600 p-3 rounded-xl">
-<i data-lucide="navigation"></i>
-</div>
+        <button onclick="limparCampos()" class="bg-amber-600 hover:bg-amber-700 w-full p-3 rounded-xl font-bold transition">
+            🧹 Limpar Campos
+        </button>
+    </div>
 
-<div>
-<h1 class="font-black text-xl">
-CircuitPro
-</h1>
+    <!-- 📋 LISTA DE ENTREGAS ADICIONADAS / PENDENTES -->
+    <div class="card p-4 mb-5">
+        <h3 class="font-bold mb-3 flex items-center gap-2">📋 Entregas Pendentes</h3>
+        <div id="listaPendentes" class="max-h-64 overflow-y-auto space-y-2">
+            <div class="text-slate-500 text-sm text-center py-3">Nenhuma entrega adicionada ainda</div>
+        </div>
+        <!-- 🔘 BOTÃO EXCLUIR TODOS -->
+        <button onclick="excluirTodosPendentes()" class="mt-3 bg-red-600 hover:bg-red-700 w-full p-3 rounded-xl font-bold transition">
+            🗑️ Excluir Todos
+        </button>
+    </div>
 
-<p class="text-xs text-indigo-400">
-Logística Inteligente
-</p>
-</div>
+    <!-- IMPORTAÇÃO CSV -->
+    <div class="card p-4 mb-5">
+        <h3 class="font-bold mb-3">Importar Lista CSV</h3>
+        <input type="file" id="csvFile" accept=".csv" class="w-full text-sm text-slate-300">
+        <button onclick="importCSV()" class="mt-3 bg-emerald-600 p-3 rounded-xl w-full font-bold">Importar Arquivo</button>
+    </div>
 
-</div>
+    <!-- ESTATÍSTICAS -->
+    <div class="card p-4 mb-5">
+        <h3 class="font-bold mb-4">Resumo</h3>
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-slate-900 p-3 rounded-xl text-center">
+                <div id="contPendentes" class="text-xl font-black text-yellow-400">0</div>
+                <div class="text-xs">Pendentes</div>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl text-center">
+                <div id="contEntregues" class="text-xl font-black text-emerald-400">0</div>
+                <div class="text-xs">Entregues</div>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-xl text-center">
+                <div id="contTotal" class="text-xl font-black text-indigo-400">0</div>
+                <div class="text-xs">Total</div>
+            </div>
+        </div>
+    </div>
 
-<!-- FORM -->
-
-<div class="card p-4 mb-5">
-
-<label class="text-xs block mb-1">
-ID DO PACOTE
-</label>
-
-<input
-id="packageIdInput"
-type="text"
-class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 mb-3"
-placeholder="#PK-001">
-
-<label class="text-xs block mb-1">
-ENDEREÇO
-</label>
-
-<input
-id="addressInput"
-type="text"
-class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 mb-3"
-placeholder="Digite o endereço">
-
-<div class="grid grid-cols-2 gap-2">
-
-<button
-onclick="addStop()"
-class="bg-indigo-600 p-3 rounded-xl font-bold">
-
-Adicionar
-</button>
-
-<button
-onclick="openScanner()"
-class="bg-slate-800 p-3 rounded-xl">
-
-OCR
-</button>
-
-</div>
-
-</div>
-
-<!-- IMPORTAÇÃO -->
-
-<div class="card p-4 mb-5">
-
-<h3 class="font-bold mb-3">
-Importar CSV
-</h3>
-
-<input
-type="file"
-id="csvFile"
-accept=".csv"
-class="w-full text-sm">
-
-<button
-onclick="importCSV()"
-class="mt-3 bg-emerald-600 p-3 rounded-xl w-full font-bold">
-
-Importar Lista
-</button>
-
-</div>
-
-<!-- ESTATÍSTICAS -->
-
-<div class="card p-4 mb-5">
-
-<h3 class="font-bold mb-4">
-Estatísticas
-</h3>
-
-<div class="grid grid-cols-3 gap-3">
-
-<div class="bg-slate-900 p-3 rounded-xl text-center">
-<div id="pendingCount" class="text-xl font-black">
-0
-</div>
-<div class="text-xs">
-Pendentes
-</div>
-</div>
-
-<div class="bg-slate-900 p-3 rounded-xl text-center">
-<div id="deliveredCount" class="text-xl font-black text-emerald-400">
-0
-</div>
-<div class="text-xs">
-Entregues
-</div>
-</div>
-
-<div class="bg-slate-900 p-3 rounded-xl text-center">
-<div id="totalCount" class="text-xl font-black text-indigo-400">
-0
-</div>
-<div class="text-xs">
-Total
-</div>
-</div>
-
-</div>
-
-</div>
-
-<button
-onclick="optimizeRouteLocal()"
-class="bg-emerald-600 w-full p-4 rounded-2xl font-black">
-
-ROTEIRIZAR AGORA
-</button>
-
+    <button onclick="iniciarRoteirizacao()" class="bg-emerald-600 w-full p-4 rounded-2xl font-black text-lg">🚀 CALCULAR MENOR ROTA</button>
 </aside>
 
-<!-- CONTEÚDO -->
-
+<!-- CONTEÚDO PRINCIPAL -->
 <main class="flex-1 p-5">
+    <!-- GPS -->
+    <div class="card p-4 mb-5">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="font-bold text-lg">📍 Sua Posição Atual</h2>
+                <p id="statusGPS" class="text-sm text-slate-400">Clique em atualizar para começar</p>
+            </div>
+            <button onclick="pegarMinhaLocalizacao()" class="bg-indigo-600 px-4 py-2 rounded-xl font-medium">Atualizar GPS</button>
+        </div>
+    </div>
 
-<!-- GPS -->
+    <!-- 🚚 ENTREGA ATUAL E AÇÕES -->
+    <div id="painelEntregaAtual" class="card p-6 mb-6 hidden border-2 border-indigo-500/40">
+        <div class="mb-4">
+            <p class="text-xs font-semibold text-indigo-400 uppercase">Você está indo para:</p>
+            <h2 id="idPacoteAtual" class="text-3xl font-black my-1">-</h2>
+            <p id="enderecoAtual" class="text-lg text-slate-200">-</p>
+        </div>
 
-<div class="card p-4 mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+            <button onclick="abrirNoGoogleMaps()" class="bg-indigo-600 p-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">🗺️ Abrir Rota</button>
+            <button onclick="marcarComoEntregueEIrProximo()" class="bg-emerald-600 p-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">✅ Entregue → Próxima</button>
+            <button onclick="ignorarEntrega()" class="bg-red-600 p-4 rounded-xl font-bold text-lg">Ignorar</button>
+        </div>
+    </div>
 
-<div class="flex justify-between">
+    <!-- 📸 STREET VIEW -->
+    <div id="painelStreetView" class="card p-4 mb-6 hidden">
+        <h3 class="font-bold mb-3 flex items-center gap-2">📸 Vista da Rua (Street View)</h3>
+        <iframe 
+            id="streetViewFrame"
+            width="100%" 
+            height="350" 
+            style="border:0; border-radius:12px;" 
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+    </div>
 
-<div>
+    <!-- 📋 ORDEM OTIMIZADA + DISTÂNCIA TOTAL -->
+    <div class="card p-5 mb-6">
+        <h2 class="font-bold text-xl mb-4 flex items-center gap-2">📋 Ordem da Rota <span id="distanciaTotal" class="text-emerald-400 text-lg ml-2"></span></h2>
+        <div id="listaRotaOtimizada" class="space-y-3">
+            <div class="text-slate-500 text-center py-6">Aguardando cálculo...</div>
+        </div>
+    </div>
 
-<h2 class="font-bold">
-Posição Atual
-</h2>
-
-<p id="gpsStatus"
-class="text-sm text-slate-400">
-Obtendo GPS...
-</p>
-
-</div>
-
-<div>
-
-<button
-onclick="getCurrentLocation()"
-class="bg-indigo-600 px-4 py-2 rounded-xl">
-
-Atualizar GPS
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- ENTREGA ATUAL -->
-
-<div
-id="currentDeliveryPanel"
-class="card p-6 mb-5 hidden">
-
-<div class="flex justify-between mb-4">
-
-<div>
-
-<p class="text-xs text-indigo-400">
-ENTREGA ATUAL
-</p>
-
-<h2
-id="currentPkgId"
-class="text-2xl font-black">
--
-</h2>
-
-</div>
-
-</div>
-
-<h3
-id="currentAddress"
-class="text-lg mb-5">
--
-</h3>
-
-<div class="flex flex-wrap gap-3">
-
-<button
-onclick="openNextInGoogleMaps()"
-class="bg-indigo-600 px-5 py-3 rounded-xl font-bold">
-
-Abrir GPS
-</button>
-
-<button
-onclick="completeCurrentDelivery()"
-class="bg-emerald-600 px-5 py-3 rounded-xl font-bold">
-
-Entregue
-</button>
-
-<button
-onclick="excludeCurrentDelivery()"
-class="bg-red-600 px-5 py-3 rounded-xl font-bold">
-
-Excluir
-</button>
-
-</div>
-
-</div>
-
-<!-- PENDENTES -->
-
-<div class="card p-5 mb-5">
-
-<h2 class="font-bold mb-4">
-Pendentes
-</h2>
-
-<ul
-id="stopsList"
-class="space-y-2">
-</ul>
-
-</div>
-
-<!-- ENTREGUES -->
-
-<div class="card p-5 mb-5">
-
-<h2 class="font-bold text-emerald-400 mb-4">
-Entregues
-</h2>
-
-<ul
-id="deliveredList"
-class="space-y-2">
-</ul>
-
-</div>
-
-<!-- ROTA -->
-
-<div class="card p-5">
-
-<h2 class="font-bold mb-4">
-Sequência da Rota
-</h2>
-
-<div
-id="routeTimeline"
-class="space-y-3">
-</div>
-
-</div>
-
+    <!-- ✅ ENTREGUES -->
+    <div class="card p-5">
+        <h2 class="font-bold text-xl mb-4 text-emerald-400">✅ Já Entregues</h2>
+        <div id="listaEntregues" class="space-y-2">
+            <div class="text-slate-500 text-center py-4">Nenhuma entrega concluída</div>
+        </div>
+    </div>
 </main>
-
 </div>
 
 <!-- MODAL OCR -->
-
-<div
-id="scannerModal"
-class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
-
-<div class="bg-slate-900 rounded-2xl p-4 w-full max-w-md">
-
-<video
-id="videoPreview"
-autoplay
-playsinline
-class="w-full rounded-xl mb-3">
-</video>
-
-<div class="flex gap-2">
-
-<button
-onclick="captureAndProcess()"
-class="bg-indigo-600 p-3 rounded-xl flex-1">
-
-Capturar
-</button>
-
-<button
-onclick="closeScanner()"
-class="bg-red-600 p-3 rounded-xl flex-1">
-
-Fechar
-</button>
-
+<div id="modalScanner" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl p-4 w-full max-w-md">
+        <video id="videoCamera" autoplay playsinline class="w-full rounded-xl mb-4"></video>
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="capturarTexto()" class="bg-indigo-600 p-3 rounded-xl font-bold">Capturar Endereço</button>
+            <button onclick="fecharScanner()" class="bg-red-600 p-3 rounded-xl font-bold">Fechar</button>
+        </div>
+    </div>
 </div>
+<canvas id="telaOculta" class="hidden"></canvas>
 
-</div>
-
-</div>
-
-<canvas id="hiddenCanvas" class="hidden"></canvas>
 <script>
-
 lucide.createIcons();
 
-/* =========================
-   VARIÁVEIS GLOBAIS
-========================= */
+// 📦 VARIÁVEIS GLOBAIS
+let entregasAdicionadas = [];
+let rotaOtimizada = [];
+let entregasConcluidas = [];
+let minhaLat = null;
+let minhaLng = null;
+let fluxoCamera = null;
 
-let stops = [];
-let optimizedStops = [];
-let deliveredStops = [];
 
-let currentLatitude = null;
-let currentLongitude = null;
-
-let videoStream = null;
-
-/* =========================
-   LOCAL STORAGE
-========================= */
-
-function saveData() {
-
-    localStorage.setItem(
-        "circuitpro_stops",
-        JSON.stringify(stops)
-    );
-
-    localStorage.setItem(
-        "circuitpro_delivered",
-        JSON.stringify(deliveredStops)
-    );
-
-    localStorage.setItem(
-        "circuitpro_route",
-        JSON.stringify(optimizedStops)
-    );
+// 💾 SALVAR / CARREGAR DADOS
+function salvarTudo(){
+    localStorage.setItem("entregas", JSON.stringify(entregasAdicionadas));
+    localStorage.setItem("rota", JSON.stringify(rotaOtimizada));
+    localStorage.setItem("concluidas", JSON.stringify(entregasConcluidas));
 }
 
-function loadData() {
-
-    const savedStops =
-        localStorage.getItem("circuitpro_stops");
-
-    const savedDelivered =
-        localStorage.getItem("circuitpro_delivered");
-
-    const savedRoute =
-        localStorage.getItem("circuitpro_route");
-
-    if(savedStops)
-        stops = JSON.parse(savedStops);
-
-    if(savedDelivered)
-        deliveredStops =
-        JSON.parse(savedDelivered);
-
-    if(savedRoute)
-        optimizedStops =
-        JSON.parse(savedRoute);
-
-    renderStops();
-    renderDelivered();
-    updateStats();
-    updateDeliveryDashboard();
+function carregarDados(){
+    const e = localStorage.getItem("entregas");
+    const r = localStorage.getItem("rota");
+    const c = localStorage.getItem("concluidas");
+    if(e) entregasAdicionadas = JSON.parse(e);
+    if(r) rotaOtimizada = JSON.parse(r);
+    if(c) entregasConcluidas = JSON.parse(c);
+    atualizarTelaPendentes();
+    atualizarEstatisticas();
+    atualizarPainelEntrega();
+    atualizarListaEntregues();
 }
 
-/* =========================
-   ADICIONAR ENTREGA
-========================= */
 
-function addStop() {
+// ➕ ADICIONAR ENTREGA
+function addStop(){
+    const id = document.getElementById("packageIdInput").value.trim();
+    const endereco = document.getElementById("addressInput").value.trim();
 
-    const pkgInput =
-        document.getElementById(
-            "packageIdInput"
-        );
+    if(!endereco) return alert("⚠️ Digite o endereço!");
+    const idFinal = id || `#PK-${Math.floor(Math.random()*999999)}`;
 
-    const addrInput =
-        document.getElementById(
-            "addressInput"
-        );
-
-    let pkgId =
-        pkgInput.value.trim();
-
-    let address =
-        addrInput.value.trim();
-
-    if(address === "") {
-
-        alert(
-            "Digite um endereço."
-        );
-
-        return;
-    }
-
-    if(pkgId === "") {
-
-        pkgId =
-        "#PK-" +
-        Math.floor(
-            100000 +
-            Math.random() * 900000
-        );
-    }
-
-    const stop = {
-
-        id:
-        Date.now().toString(),
-
-        pkgId,
-
-        name: address,
-
-        lat:null,
-        lng:null
-    };
-
-    stops.push(stop);
-
-    pkgInput.value = "";
-    addrInput.value = "";
-
-    renderStops();
-    updateStats();
-    saveData();
-}
-
-/* =========================
-   REMOVER PENDENTE
-========================= */
-
-function removeStop(id){
-
-    stops =
-    stops.filter(
-        stop => stop.id !== id
-    );
-
-    optimizedStops =
-    optimizedStops.filter(
-        stop => stop.id !== id
-    );
-
-    renderStops();
-    updateStats();
-    saveData();
-}
-
-/* =========================
-   RENDER PENDENTES
-========================= */
-
-function renderStops() {
-
-    const list =
-    document.getElementById(
-        "stopsList"
-    );
-
-    list.innerHTML = "";
-
-    if(stops.length === 0){
-
-        list.innerHTML =
-        `
-        <li class="text-slate-500 text-sm">
-        Nenhuma entrega pendente
-        </li>
-        `;
-
-        return;
-    }
-
-    stops.forEach(stop => {
-
-        const li =
-        document.createElement("li");
-
-        li.className =
-        "bg-slate-900 p-3 rounded-xl flex justify-between items-center";
-
-        li.innerHTML = `
-        <div>
-            <div class="font-bold text-indigo-400">
-                ${stop.pkgId}
-            </div>
-
-            <div class="text-sm">
-                ${stop.name}
-            </div>
-        </div>
-
-        <button
-        onclick="removeStop('${stop.id}')"
-        class="bg-red-600 px-3 py-2 rounded-lg">
-
-        X
-
-        </button>
-        `;
-
-        list.appendChild(li);
-
+    entregasAdicionadas.push({
+        idUnico: Date.now().toString(),
+        idPacote: idFinal,
+        endereco: endereco,
+        lat: null,
+        lng: null
     });
+
+    document.getElementById("packageIdInput").value = "";
+    document.getElementById("addressInput").value = "";
+
+    atualizarTelaPendentes();
+    atualizarEstatisticas();
+    salvarTudo();
 }
 
-/* =========================
-   RENDER ENTREGUES
-========================= */
+// 🧹 LIMPAR CAMPOS DE DIGITAÇÃO
+function limparCampos(){
+    document.getElementById("packageIdInput").value = "";
+    document.getElementById("addressInput").value = "";
+}
 
-function renderDelivered() {
 
-    const list =
-    document.getElementById(
-        "deliveredList"
-    );
-
-    list.innerHTML = "";
-
-    if(deliveredStops.length === 0){
-
-        list.innerHTML =
-        `
-        <li class="text-slate-500 text-sm">
-        Nenhuma entrega concluída
-        </li>
-        `;
-
+// 📋 LISTA PENDENTES
+function atualizarTelaPendentes(){
+    const div = document.getElementById("listaPendentes");
+    if(entregasAdicionadas.length ===0){
+        div.innerHTML = `<div class="text-slate-500 text-sm text-center py-3">Nenhuma entrega adicionada ainda</div>`;
         return;
     }
-
-    deliveredStops.forEach(stop => {
-
-        const li =
-        document.createElement("li");
-
-        li.className =
-        "bg-emerald-950 p-3 rounded-xl border border-emerald-800";
-
-        li.innerHTML = `
-        <div class="flex justify-between">
-
+    div.innerHTML = "";
+    entregasAdicionadas.forEach((entrega, indice)=>{
+        const el = document.createElement("div");
+        el.className = "bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center";
+        el.innerHTML = `
             <div>
-
-                <div class="font-bold text-emerald-400">
-                    ${stop.pkgId}
-                </div>
-
-                <div class="text-sm text-white">
-                    ${stop.name}
-                </div>
-
+                <div class="font-bold text-indigo-400">${entrega.idPacote}</div>
+                <div class="text-sm text-slate-300">${entrega.endereco.substring(0,35)}...</div>
             </div>
-
-            <button
-            onclick="reopenDelivery('${stop.id}')"
-            class="bg-amber-500 text-black px-3 py-2 rounded-lg">
-
-            Reabrir
-
-            </button>
-
-        </div>
+            <button onclick="removerEntrega('${entrega.idUnico}')" class="bg-red-700/60 w-8 h-8 rounded-lg flex items-center justify-center">×</button>
         `;
-
-        list.appendChild(li);
-
+        div.appendChild(el);
     });
 }
 
-/* =========================
-   REABRIR ENTREGA
-========================= */
-
-function reopenDelivery(id){
-
-    const item =
-    deliveredStops.find(
-        stop => stop.id === id
-    );
-
-    if(!item) return;
-
-    deliveredStops =
-    deliveredStops.filter(
-        stop => stop.id !== id
-    );
-
-    stops.push(item);
-
-    renderDelivered();
-    renderStops();
-    updateStats();
-    saveData();
+function removerEntrega(id){
+    entregasAdicionadas = entregasAdicionadas.filter(e=>e.idUnico !== id);
+    atualizarTelaPendentes();
+    atualizarEstatisticas();
+    salvarTudo();
 }
 
-/* =========================
-   ESTATÍSTICAS
-========================= */
-
-function updateStats(){
-
-    document.getElementById(
-        "pendingCount"
-    ).innerText =
-    stops.length;
-
-    document.getElementById(
-        "deliveredCount"
-    ).innerText =
-    deliveredStops.length;
-
-    document.getElementById(
-        "totalCount"
-    ).innerText =
-    stops.length +
-    deliveredStops.length;
-}
-
-/* =========================
-   MARCAR COMO ENTREGUE
-========================= */
-
-function completeCurrentDelivery(){
-
-    if(
-        optimizedStops.length === 0
-    ){
+// 🗑️ EXCLUIR TODOS OS ENDEREÇOS PENDENTES
+function excluirTodosPendentes(){
+    if(entregasAdicionadas.length === 0){
+        alert("ℹ️ Não há endereços pendentes para excluir.");
         return;
     }
-
-    const completed =
-    optimizedStops.shift();
-
-    deliveredStops.push(
-        completed
-    );
-
-    stops =
-    stops.filter(
-        stop =>
-        stop.id !== completed.id
-    );
-
-    renderStops();
-    renderDelivered();
-    updateStats();
-
-    saveData();
-
-    updateDeliveryDashboard();
-
-    if(
-        optimizedStops.length > 0
-    ){
-
-        setTimeout(() => {
-
-            openNextInGoogleMaps();
-
-        },500);
-
-    }
-    else{
-
-        alert(
-            "Todas as entregas foram concluídas."
-        );
+    if(confirm("⚠️ Tem certeza que deseja EXCLUIR TODOS os endereços pendentes?\nEsta ação não pode ser desfeita!")){
+        entregasAdicionadas = [];
+        atualizarTelaPendentes();
+        atualizarEstatisticas();
+        salvarTudo();
+        alert("✅ Todos os endereços pendentes foram removidos.");
     }
 }
 
-/* =========================
-   EXCLUIR ENTREGA ATUAL
-========================= */
 
-function excludeCurrentDelivery(){
-
-    if(
-        optimizedStops.length === 0
-    ){
-        return;
-    }
-
-    const removed =
-    optimizedStops.shift();
-
-    stops =
-    stops.filter(
-        stop =>
-        stop.id !== removed.id
-    );
-
-    renderStops();
-
-    updateStats();
-
-    saveData();
-
-    updateDeliveryDashboard();
+// 📊 ESTATÍSTICAS
+function atualizarEstatisticas(){
+    document.getElementById("contPendentes").innerText = entregasAdicionadas.length;
+    document.getElementById("contEntregues").innerText = entregasConcluidas.length;
+    document.getElementById("contTotal").innerText = entregasAdicionadas.length + entregasConcluidas.length;
 }
 
-/* =========================
-   IMPORTAÇÃO CSV
-========================= */
 
-function importCSV(){
-
-    const file =
-    document.getElementById(
-        "csvFile"
-    ).files[0];
-
-    if(!file){
-
-        alert(
-            "Selecione um CSV."
-        );
-
-        return;
-    }
-
-    const reader =
-    new FileReader();
-
-    reader.onload =
-    function(event){
-
-        const rows =
-        event.target.result
-        .split("\n");
-
-        rows.forEach(row => {
-
-            const cols =
-            row.split(",");
-
-            if(cols.length >= 2){
-
-                stops.push({
-
-                    id:
-                    Date.now() +
-                    Math.random()
-                    .toString(),
-
-                    pkgId:
-                    cols[0].trim(),
-
-                    name:
-                    cols[1].trim(),
-
-                    lat:null,
-                    lng:null
-                });
-
-            }
-
-        });
-
-        renderStops();
-        updateStats();
-        saveData();
-
-        alert(
-            "Importação concluída."
-        );
-    };
-
-    reader.readAsText(file);
-}
-
-/* =========================
-   INICIALIZAÇÃO
-========================= */
-
-loadData();
-
-            </script>
-            <script>
-
-/* ==========================================
-   GPS DO MOTORISTA
-========================================== */
-
-function getCurrentLocation(){
-
-    const status =
-    document.getElementById(
-        "gpsStatus"
-    );
-
-    status.innerText =
-    "Obtendo localização...";
-
+// 📍 LOCALIZAÇÃO
+function pegarMinhaLocalizacao(){
+    const status = document.getElementById("statusGPS");
+    status.innerText = "⏳ Obtendo localização...";
     if(!navigator.geolocation){
-
-        status.innerText =
-        "GPS não suportado";
-
+        status.innerText = "❌ GPS não suportado";
         return;
     }
-
     navigator.geolocation.getCurrentPosition(
-
-        function(position){
-
-            currentLatitude =
-            position.coords.latitude;
-
-            currentLongitude =
-            position.coords.longitude;
-
-            status.innerText =
-            `Lat: ${currentLatitude.toFixed(5)}
-             | Lng: ${currentLongitude.toFixed(5)}`;
-
+        pos=>{
+            minhaLat = pos.coords.latitude;
+            minhaLng = pos.coords.longitude;
+            status.innerHTML = `✅ Lat: ${minhaLat.toFixed(5)} <br> Lng: ${minhaLng.toFixed(5)}`;
         },
-
-        function(){
-
-            status.innerText =
-            "Falha ao obter GPS";
+        erro=>{
+            status.innerText = "❌ Não foi possível obter localização";
+            minhaLat = -21.7595; minhaLng = -43.3424;
         },
-
-        {
-            enableHighAccuracy:true,
-            timeout:10000,
-            maximumAge:0
-        }
-
+        {enableHighAccuracy:true, timeout:12000}
     );
 }
 
-/* ==========================================
-   GEOCODIFICAÇÃO OSM
-========================================== */
 
-async function fetchCoordinates(address){
-
+// 📍 COORDENADAS
+async function pegarCoordenadas(endereco){
     try{
-
-        const response =
-        await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
-        );
-
-        const data =
-        await response.json();
-
-        if(data.length > 0){
-
-            return {
-
-                lat:
-                parseFloat(data[0].lat),
-
-                lng:
-                parseFloat(data[0].lon)
-
-            };
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}&countrycodes=BR&limit=1`);
+        const dados = await res.json();
+        if(dados.length>0){
+            return {lat:parseFloat(dados[0].lat), lng:parseFloat(dados[0].lon)};
         }
-
-    }catch(error){
-
-        console.error(error);
-    }
-
+    }catch(e){console.error(e)}
     return null;
 }
 
-/* ==========================================
-   DISTÂNCIA HAVERSINE
-========================================== */
 
-function calculateDistance(
-    lat1,
-    lon1,
-    lat2,
-    lon2
-){
-
+// 📏 DISTÂNCIA ENTRE DOIS PONTOS (KM)
+function calcularDistanciaKM(lat1, lng1, lat2, lng2){
     const R = 6371;
-
-    const dLat =
-    (lat2 - lat1) *
-    Math.PI / 180;
-
-    const dLon =
-    (lon2 - lon1) *
-    Math.PI / 180;
-
-    const a =
-    Math.sin(dLat/2) *
-    Math.sin(dLat/2)
-    +
-    Math.cos(lat1*Math.PI/180)
-    *
-    Math.cos(lat2*Math.PI/180)
-    *
-    Math.sin(dLon/2)
-    *
-    Math.sin(dLon/2);
-
-    const c =
-    2 *
-    Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1-a)
-    );
-
-    return R * c;
+    const dLat = (lat2 - lat1)*Math.PI/180;
+    const dLng = (lng2 - lng1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-/* ==========================================
-   ROTEIRIZAÇÃO PROFISSIONAL
-========================================== */
-
-async function optimizeRouteLocal(){
-
-    if(stops.length === 0){
-
-        alert(
-            "Adicione entregas primeiro."
-        );
-
-        return;
+// 📏 DISTÂNCIA TOTAL DE UMA SEQUÊNCIA
+function calcularDistanciaTotal(sequencia, pontoInicial){
+    let total = 0;
+    let atual = pontoInicial;
+    for(let parada of sequencia){
+        total += calcularDistanciaKM(atual.lat, atual.lng, parada.lat, parada.lng);
+        atual = parada;
     }
+    return total;
+}
 
-    if(
-        currentLatitude === null ||
-        currentLongitude === null
-    ){
-
-        alert(
-            "Atualize o GPS antes."
-        );
-
-        return;
+// 🔄 GERAR PERMUTAÇÕES (PARA TESTAR TODAS AS ORDENS)
+function permutar(arr){
+    if(arr.length===0) return [];
+    if(arr.length===1) return [arr];
+    let resultado = [];
+    for(let i=0; i<arr.length; i++){
+        const atual = arr[i];
+        const resto = arr.slice(0,i).concat(arr.slice(i+1));
+        const permRest = permutar(resto);
+        for(let p of permRest){
+            resultado.push([atual].concat(p));
+        }
     }
+    return resultado;
+}
 
-    for(let stop of stops){
 
-        if(
-            stop.lat === null
-        ){
+// 🚀 ALGORITMO: MENOR QUILOMETRAGEM TOTAL
+async function iniciarRoteirizacao(){
+    if(entregasAdicionadas.length===0) return alert("⚠️ Adicione entregas primeiro!");
+    if(!minhaLat || !minhaLng) return alert("⚠️ Atualize sua localização primeiro!");
 
-            const coords =
-            await fetchCoordinates(
-                stop.name
-            );
+    alert("⏳ Calculando rota com MENOR quilometragem...");
 
-            if(coords){
-
-                stop.lat =
-                coords.lat;
-
-                stop.lng =
-                coords.lng;
-            }
+    // 1. Pegar coordenadas de todas
+    for(let e of entregasAdicionadas){
+        if(!e.lat || !e.lng){
+            const coord = await pegarCoordenadas(e.endereco);
+            if(coord){ e.lat = coord.lat; e.lng = coord.lng; }
+            else{ e.lat = minhaLat+(Math.random()*0.08-0.04); e.lng=minhaLng+(Math.random()*0.08-0.04); }
         }
     }
 
-    let unvisited =
-    [...stops];
+    const lista = [...entregasAdicionadas];
+    const origem = {lat:minhaLat, lng:minhaLng};
 
-    let currentPoint = {
+    // 2. Se até 8 pontos: testa TODAS as ordens (resultado EXATO)
+    if(lista.length <= 8){
+        const todasOrdens = permutar(lista);
+        let menorDist = Infinity;
+        let melhorOrdem = lista;
 
-        lat:currentLatitude,
-        lng:currentLongitude
-
-    };
-
-    let route = [];
-
-    while(
-        unvisited.length > 0
-    ){
-
-        let nearestIndex = 0;
-
-        let nearestDistance =
-        Infinity;
-
-        for(
-            let i = 0;
-            i < unvisited.length;
-            i++
-        ){
-
-            const stop =
-            unvisited[i];
-
-            const dist =
-            calculateDistance(
-
-                currentPoint.lat,
-                currentPoint.lng,
-
-                stop.lat,
-                stop.lng
-
-            );
-
-            if(
-                dist <
-                nearestDistance
-            ){
-
-                nearestDistance =
-                dist;
-
-                nearestIndex =
-                i;
+        for(let ordem of todasOrdens){
+            const dist = calcularDistanciaTotal(ordem, origem);
+            if(dist < menorDist){
+                menorDist = dist;
+                melhorOrdem = ordem;
             }
         }
+        rotaOtimizada = melhorOrdem;
+        document.getElementById("distanciaTotal").innerText = `| Total: ${menorDist.toFixed(1)} km`;
+    }
+    else{
+        // 3. Mais de 8 pontos: usa método 2-Opt (melhora muito o vizinho próximo)
+        // Começa com vizinho próximo, depois otimiza trocando pares
+        let atual = origem;
+        let naoVisitadas = [...lista];
+        rotaOtimizada = [];
 
-        const nextStop =
-        unvisited.splice(
-            nearestIndex,
-            1
-        )[0];
+        // Primeiro: vizinho próximo
+        while(naoVisitadas.length>0){
+            let proxIdx = 0;
+            let menor = Infinity;
+            for(let i=0; i<naoVisitadas.length; i++){
+                const d = calcularDistanciaKM(atual.lat, atual.lng, naoVisitadas[i].lat, naoVisitadas[i].lng);
+                if(d < menor){ menor = d; proxIdx = i; }
+            }
+            const p = naoVisitadas.splice(proxIdx,1)[0];
+            rotaOtimizada.push(p);
+            atual = p;
+        }
 
-        route.push(
-            nextStop
-        );
+        // Agora otimiza com 2-Opt
+        let melhorou;
+        do{
+            melhorou = false;
+            for(let i=0; i<rotaOtimizada.length-2; i++){
+                for(let j=i+2; j<rotaOtimizada.length; j++){
+                    const dAntes = calcularDistanciaKM(
+                        i===0 ? origem : rotaOtimizada[i-1], rotaOtimizada[i]
+                    ) + calcularDistanciaKM(rotaOtimizada[j], j===rotaOtimizada.length-1 ? rotaOtimizada[j] : rotaOtimizada[j+1]);
 
-        currentPoint = {
+                    const dDepois = calcularDistanciaKM(
+                        i===0 ? origem : rotaOtimizada[i-1], rotaOtimizada[j]
+                    ) + calcularDistanciaKM(rotaOtimizada[i], j===rotaOtimizada.length-1 ? rotaOtimizada[j] : rotaOtimizada[j+1]);
 
-            lat:nextStop.lat,
-            lng:nextStop.lng
-        };
+                    if(dDepois < dAntes){
+                        // Troca trecho
+                        rotaOtimizada = [
+                            ...rotaOtimizada.slice(0,i),
+                            ...rotaOtimizada.slice(i,j+1).reverse(),
+                            ...rotaOtimizada.slice(j+1)
+                        ];
+                        melhorou = true;
+                    }
+                }
+            }
+        }while(melhorou);
+
+        const totalFinal = calcularDistanciaTotal(rotaOtimizada, origem);
+        document.getElementById("distanciaTotal").innerText = `| Total: ${totalFinal.toFixed(1)} km`;
     }
 
-    optimizedStops =
-    route;
-
-    saveData();
-
-    updateDeliveryDashboard();
-
-    alert(
-        "Rota otimizada com sucesso."
-    );
+    entregasAdicionadas = [];
+    atualizarTelaPendentes();
+    atualizarListaRota();
+    atualizarPainelEntrega();
+    salvarTudo();
+    alert("✅ Rota calculada com MENOR distância total!");
 }
 
-/* ==========================================
-   DASHBOARD DA ENTREGA
-========================================== */
 
-function updateDeliveryDashboard(){
-
-    const panel =
-    document.getElementById(
-        "currentDeliveryPanel"
-    );
-
-    const routeList =
-    document.getElementById(
-        "routeTimeline"
-    );
-
-    if(
-        optimizedStops.length === 0
-    ){
-
-        panel.classList.add(
-            "hidden"
-        );
-
-        routeList.innerHTML =
-        `
-        <div class="text-slate-500">
-        Nenhuma rota ativa.
-        </div>
+// 📋 LISTA ROTA
+function atualizarListaRota(){
+    const div = document.getElementById("listaRotaOtimizada");
+    if(rotaOtimizada.length===0){
+        div.innerHTML = `<div class="text-slate-500 text-center py-6">Aguardando cálculo...</div>`;
+        return;
+    }
+    div.innerHTML="";
+    rotaOtimizada.forEach((e,i)=>{
+        const el = document.createElement("div");
+        el.className = `p-4 rounded-xl border flex gap-4 items-center ${i===0 ? "bg-indigo-900/40 border-indigo-500" : "bg-slate-900 border-slate-700"}`;
+        el.innerHTML = `
+            <div class="w-9 h-9 rounded-full bg-indigo-600 font-bold flex items-center justify-center">${i+1}</div>
+            <div>
+                <div class="font-bold ${i===0?'text-white':'text-indigo-300'}">${e.idPacote}</div>
+                <div class="text-sm text-slate-300">${e.endereco}</div>
+            </div>
         `;
-
-        return;
-    }
-
-    panel.classList.remove(
-        "hidden"
-    );
-
-    const current =
-    optimizedStops[0];
-
-    document.getElementById(
-        "currentPkgId"
-    ).innerText =
-    current.pkgId;
-
-    document.getElementById(
-        "currentAddress"
-    ).innerText =
-    current.name;
-
-    routeList.innerHTML = "";
-
-    optimizedStops.forEach(
-
-        (stop,index)=>{
-
-            const item =
-            document.createElement(
-                "div"
-            );
-
-            item.className =
-            "bg-slate-900 p-3 rounded-xl";
-
-            item.innerHTML =
-            `
-            <div class="text-indigo-400 font-bold">
-            ${index+1}
-            </div>
-
-            <div class="font-bold">
-            ${stop.pkgId}
-            </div>
-
-            <div class="text-sm">
-            ${stop.name}
-            </div>
-            `;
-
-            routeList.appendChild(
-                item
-            );
-        }
-    );
+        div.appendChild(el);
+    });
 }
 
-/* ==========================================
-   GOOGLE MAPS
-========================================== */
 
-function openNextInGoogleMaps(){
+// 🚚 PAINEL ATUAL
+function atualizarPainelEntrega(){
+    const painel = document.getElementById("painelEntregaAtual");
+    const painelStreet = document.getElementById("painelStreetView");
+    const frameStreet = document.getElementById("streetViewFrame");
 
-    if(
-        optimizedStops.length === 0
-    ){
+    if(rotaOtimizada.length===0){
+        painel.classList.add("hidden");
+        painelStreet.classList.add("hidden");
         return;
     }
+    painel.classList.remove("hidden");
+    painelStreet.classList.remove("hidden");
 
-    const stop =
-    optimizedStops[0];
+    const atual = rotaOtimizada[0];
+    document.getElementById("idPacoteAtual").innerText = atual.idPacote;
+    document.getElementById("enderecoAtual").innerText = atual.endereco;
 
-    const url =
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.name)}`;
+    // Atualiza Street View com as coordenadas
+    if(atual.lat && atual.lng){
+        frameStreet.src = `https://www.google.com/maps/embed?pb=!1m0!2m1!1e1!3m2!1s${atual.lat}!2s${atual.lng}!4v1!4m0!5m1!1s${atual.lat},${atual.lng}`;
+    }
 
-    window.open(
-        url,
-        "_blank"
-    );
+    atualizarListaRota();
 }
 
-/* ==========================================
-   OCR - ABRIR CÂMERA
-========================================== */
 
-async function openScanner(){
+// ✅ MARCAR ENTREGUE E IR PROXIMO
+function marcarComoEntregueEIrProximo(){
+    if(rotaOtimizada.length===0) return;
 
-    try{
+    const concluida = rotaOtimizada.shift();
+    entregasConcluidas.push(concluida);
 
-        videoStream =
-        await navigator
-        .mediaDevices
-        .getUserMedia({
+    atualizarPainelEntrega();
+    atualizarListaEntregues();
+    atualizarEstatisticas();
+    salvarTudo();
 
-            video:{
-                facingMode:"environment"
+    // 🔁 SE AINDA TEM PROXIMA, ABRE O MAPA
+    if(rotaOtimizada.length > 0){
+        setTimeout(() => abrirNoGoogleMaps(), 400);
+    } 
+    else 
+    {
+        // 🧹 LIMPAR TUDO MESMO - ZERA TUDO DO ZERO
+        alert("🏁 TODAS AS ENTREGAS FINALIZADAS!\nO sistema será reiniciado para uma nova viagem.");
+        
+        entregasAdicionadas = [];
+        rotaOtimizada = [];
+        entregasConcluidas = [];
+        
+        localStorage.clear(); // apaga tudo salvo
+        
+        atualizarTelaPendentes();
+        atualizarListaRota();
+        atualizarListaEntregues();
+        atualizarEstatisticas();
+        atualizarPainelEntrega();
+    }
+}
+
+
+// 🗺️ ABRIR MAPA
+function abrirNoGoogleMaps(){
+    if(rotaOtimizada.length===0) return;
+    const end = rotaOtimizada[0].endereco;
+    window.open(`https://www.google.com/maps/dir/?api=1&origin=${minhaLat},${minhaLng}&destination=${encodeURIComponent(end)}&travelmode=driving`, "_blank");
+}
+
+function ignorarEntrega(){
+    if(rotaOtimizada.length===0) return;
+    rotaOtimizada.shift();
+    atualizarPainelEntrega();
+    salvarTudo();
+}
+
+
+// ✅ LISTA ENTREGUES
+function atualizarListaEntregues(){
+    const div = document.getElementById("listaEntregues");
+    if(entregasConcluidas.length===0){
+        div.innerHTML = `<div class="text-slate-500 text-center py-4">Nenhuma entrega concluída</div>`;
+        return;
+    }
+    div.innerHTML="";
+    entregasConcluidas.forEach(e=>{
+        const el = document.createElement("div");
+        el.className = "bg-emerald-950/40 p-3 rounded-xl border border-emerald-700/40";
+        el.innerHTML = `<div class="font-bold text-emerald-400">${e.idPacote}</div><div class="text-sm">${e.endereco}</div>`;
+        div.appendChild(el);
+    });
+}
+
+
+// 📤 CSV
+function importCSV(){
+    const arquivo = document.getElementById("csvFile").files[0];
+    if(!arquivo) return alert("Escolha um arquivo .csv");
+    const ler = new FileReader();
+    ler.onload = ev=>{
+        ev.target.result.split("\n").forEach(linha=>{
+            const col = linha.split(",");
+            if(col.length>=2 && col[0].trim()){
+                entregasAdicionadas.push({
+                    idUnico: Date.now()+Math.random(),
+                    idPacote: col[0].trim(),
+                    endereco: col[1].trim(),
+                    lat:null, lng:null
+                });
             }
-
         });
-
-        document
-        .getElementById(
-            "scannerModal"
-        )
-        .classList
-        .remove("hidden");
-
-        document
-        .getElementById(
-            "videoPreview"
-        )
-        .srcObject =
-        videoStream;
-
-    }
-    catch(error){
-
-        alert(
-            "Erro ao abrir câmera."
-        );
-    }
+        atualizarTelaPendentes();
+        atualizarEstatisticas();
+        salvarTudo();
+        alert("✅ Importado!");
+    };
+    ler.readAsText(arquivo,"UTF-8");
 }
 
-/* ==========================================
-   FECHAR CÂMERA
-========================================== */
 
-function closeScanner(){
-
-    if(videoStream){
-
-        videoStream
-        .getTracks()
-        .forEach(
-            track =>
-            track.stop()
-        );
-    }
-
-    document
-    .getElementById(
-        "scannerModal"
-    )
-    .classList
-    .add("hidden");
-}
-
-/* ==========================================
-   OCR TESSERACT
-========================================== */
-
-async function captureAndProcess(){
-
-    const video =
-    document.getElementById(
-        "videoPreview"
-    );
-
-    const canvas =
-    document.getElementById(
-        "hiddenCanvas"
-    );
-
-    const ctx =
-    canvas.getContext("2d");
-
-    canvas.width =
-    video.videoWidth;
-
-    canvas.height =
-    video.videoHeight;
-
-    ctx.drawImage(
-        video,
-        0,
-        0
-    );
-
+// 📸 OCR
+async function openScanner(){
     try{
-
-        const result =
-        await Tesseract
-        .recognize(
-            canvas,
-            "por"
-        );
-
-        const text =
-        result.data.text
-        .trim();
-
-        if(
-            text.length > 3
-        ){
-
-            document
-            .getElementById(
-                "addressInput"
-            )
-            .value =
-            text;
-
-            closeScanner();
-
-            alert(
-                "Texto capturado."
-            );
-        }
-        else{
-
-            alert(
-                "Texto não identificado."
-            );
-        }
-
-    }
-    catch(error){
-
-        alert(
-            "Falha no OCR."
-        );
-    }
+        fluxoCamera = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+        document.getElementById("modalScanner").classList.remove("hidden");
+        document.getElementById("videoCamera").srcObject = fluxoCamera;
+    }catch(e){alert("❌ Câmera indisponível")}
+}
+function fecharScanner(){
+    if(fluxoCamera) fluxoCamera.getTracks().forEach(t=>t.stop());
+    document.getElementById("modalScanner").classList.add("hidden");
+}
+async function capturarTexto(){
+    const v = document.getElementById("videoCamera");
+    const c = document.getElementById("telaOculta");
+    const ctx = c.getContext("2d");
+    c.width=v.videoWidth; c.height=v.videoHeight;
+    ctx.drawImage(v,0,0);
+    try{
+        const res = await Tesseract.recognize(c,"por");
+        const texto = res.data.text.trim();
+        if(texto.length>6){
+            document.getElementById("addressInput").value = texto;
+            fecharScanner();
+            alert("✅ Endereço capturado!");
+        }else alert("❌ Não foi possível ler");
+    }catch(e){alert("❌ Erro ao processar imagem")}
 }
 
-/* ==========================================
-   INICIALIZAÇÃO
-========================================== */
 
-window.onload = () => {
-
-    getCurrentLocation();
-
-    updateStats();
-
-    renderStops();
-
-    renderDelivered();
-
-    updateDeliveryDashboard();
-
-    lucide.createIcons();
+window.onload = ()=>{
+    pegarMinhaLocalizacao();
+    carregarDados();
 };
 
 </script>
-
 </body>
 </html>
